@@ -10,12 +10,12 @@
 
   </head>
   <body>
-    <h1>Fantasy Analyzer Home</h1>
+    <h1>Games</h1>
     <% if (user) { %>
     <div>Hello, <%= user.firstName %></div>
-    <div><a href="/games">Games</a></div>
+    <div>Here are your games: <%= games %></div>
 
-    <div><%= bodyTest %></div>
+    <div><%= games %></div>
     <% } else { %>
       <div><a href="/auth/yahoo">Sign In</a></div>
     <% } %>
