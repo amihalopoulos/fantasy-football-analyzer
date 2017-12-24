@@ -13,9 +13,14 @@
     <h1>Games</h1>
     <% if (user) { %>
     <div>Hello, <%= user.firstName %></div>
-    <div>Here are your games: <%= games %></div>
+    <div>Here are your games: </div>
+      <% console.log(games)%>
 
-    <div><%= games %></div>
+    <% for(var i=0; i < games.length; i++) { %>
+
+      <div><a href="/league/<%= games[i].league_key %>"><%= games[i].name %></a></div>
+    <% } %>
+
     <% } else { %>
       <div><a href="/auth/yahoo">Sign In</a></div>
     <% } %>
