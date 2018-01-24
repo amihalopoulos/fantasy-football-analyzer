@@ -11,10 +11,14 @@
   </head>
   <body>
     <h1>League</h1>
-
-    <% for(var i=0; i < roster.length; i++) { %>
-      <div><%= roster[i].name.full %></div>
+    <% for(var x=0; x < roster.length; x++) { %>
+      <h2>Team <%= x %></h2>
+      <% for(var i=0; i < roster[x].length; i++) { %>
+        <div><%= roster[x][i].name.full %></div>
+      <% } %>
     <% } %>
+    
+
       
     <% include footer %>
 

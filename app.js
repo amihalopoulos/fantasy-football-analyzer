@@ -47,27 +47,34 @@ var redirectUri = process.env.REDIRECT_URI || 'http://alexei.com/auth/yahoo/call
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({extended: false}));
 
+
   app.use(session({
     secret: 'keyboard cat',
     resave: false,
     saveUninitialized: true
   }));
 
-  app.use(express.static(path.join(__dirname, 'app')));
+  // app.use(express.static(path.join(__dirname, 'app')));
 
-  app.get('/', function(req, res) {
-    var user = false;
-    if (req.session.user) {
-      user = req.session.user;
-    }
+app.use(express.static(path.join(__dirname, './dist')));
+app.get('*', (req, res) => {
+  console.log('Serving ', req.url);
+  res.sendFile(__dirname + '/dist/app.html');
+});
 
-    res.render('index', {
-      title: 'Home',
-      user: req.session.user,
-      bodyTest: user ? user.bodyTest : 'No data'
-    })
-  });
-// }
+
+  // app.get('/', function(req, res) {
+  //   var user = false;
+  //   if (req.session.user) {
+  //     user = req.session.user;
+  //   }
+
+  //   res.render('index', {
+  //     title: 'Home',
+  //     user: req.session.user,
+  //     bodyTest: user ? user.bodyTest : 'No data'
+  //   })
+  // });
 
   //Oauth
   app.get('/auth/yahoo', function(req, res) {
@@ -154,43 +161,48 @@ var redirectUri = process.env.REDIRECT_URI || 'http://alexei.com/auth/yahoo/call
 
     // settings: "http://fantasysports.yahooapis.com/fantasy/v2/league/223.l.431/settings"
     // standings: https://fantasysports.yahooapis.com/fantasy/v2/league/223.l.431/standings
+    // players: "http://fantasysports.yahooapis.com/fantasy/v2/league/223.l.431/players"
+    //rosters
 
     //get every single roster
 
-    var opts = {
-      url: 'https://fantasysports.yahooapis.com/fantasy/v2/team/'+req.params.leagueKey+'.t.10/roster/players?format=json',
+    var allRosterOpts = {
+      url: 'https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/teams/roster/players?format=json',
       method: 'GET',
       headers: { Authorization: 'Bearer ' + user.accessToken },
       rejectUnauthorized: false,
       json: true
     }
 
-    request(opts, function(err, response, body){
-      //team[1].roster['0'].players['0'].player[0].name
+    request(allRosterOpts, function(err, response, body){
+      console.log(body.fantasy_content.league[1].teams)
+      var rawTeams = body.fantasy_content.league[1].teams;
+      var count = body.fantasy_content.league[1].teams.count;
 
-      //normalize rosters
-      var normalized = [];
-      var final = [];
-      var rawRoster = body.fantasy_content.team[1].roster['0'].players;
-      console.log(rawRoster)
-      var numPlayers = Object.keys(rawRoster)
-      for (var i = 0; i < numPlayers.length; i++) {
+      var teams = [];
+      for (var i = 0; i < count; i++) {
         var x = ''+i
-        if (rawRoster[x] && rawRoster[x].player) {
-          normalized.push(rawRoster[x].player)
+        var t = rawTeams[x].team
+        teams.push(t)
+      }
+      console.log(teams.length)
+      var final = [];
+
+      for (var i = 0; i < teams.length; i++) {
+        var team = [];
+        var normalized = [];
+        var rawRoster = teams[i][1].roster['0'].players;
+        var numPlayers = Object.keys(rawRoster)
+        for (var y = 0; y < numPlayers.length; y++) {
+          var x = ''+y
+          if (rawRoster[x] && rawRoster[x].player) {
+            var player = {}
+            player.name = rawRoster[x].player[0][2].name
+            normalized.push(player)
+          }
         }
+        final.push(normalized)
       }
-      for (var i = 0; i < normalized.length; i++) {
-        var player = {}
-        player.name = normalized[i][0][2].name
-        // final.push(normalized[i][0])
-        final.push(player)
-
-      }
-console.log(final)
-
-
-      var roster = body.fantasy_content.team
 
       res.render('league', {
         title: 'League',
@@ -198,6 +210,44 @@ console.log(final)
         roster: final
       })
     })
+
+    var individualRosterOpts = {
+      url: 'https://fantasysports.yahooapis.com/fantasy/v2/team/'+req.params.leagueKey+'.t.10/roster/players?format=json',
+      method: 'GET',
+      headers: { Authorization: 'Bearer ' + user.accessToken },
+      rejectUnauthorized: false,
+      json: true
+    }
+
+    // request(individualRosterOpts, function(err, response, body){
+    //   //team[1].roster['0'].players['0'].player[0].name
+
+    //   //normalize rosters
+    //   var normalized = [];
+    //   var final = [];
+    //   var rawRoster = body.fantasy_content.team[1].roster['0'].players;
+    //   console.log(rawRoster)
+    //   var numPlayers = Object.keys(rawRoster)
+    //   for (var i = 0; i < numPlayers.length; i++) {
+    //     var x = ''+i
+    //     if (rawRoster[x] && rawRoster[x].player) {
+    //       normalized.push(rawRoster[x].player)
+    //     }
+    //   }
+    //   for (var i = 0; i < normalized.length; i++) {
+    //     var player = {}
+    //     player.name = normalized[i][0][2].name
+    //     final.push(player)
+    //   }
+
+    //   var roster = body.fantasy_content.team
+
+    //   res.render('league', {
+    //     title: 'League',
+    //     user: req.session.user,
+    //     roster: final
+    //   })
+    // })
 
 
   })
