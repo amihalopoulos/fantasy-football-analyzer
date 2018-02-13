@@ -1,9 +1,12 @@
-import React from 'react';
-export default function app() {
-    return (
-        <div>
-            <h1>JSX</h1>
-            <span>My first JSX span!</span>
+import React, { Component } from 'react';
+import User from './User/user-profile-container'
+
+class App extends Component{
+    render() {
+        return <div>
+            <User name="Hardcode Test" />
         </div>
-    );
+    };
 }
+
+export default App;
