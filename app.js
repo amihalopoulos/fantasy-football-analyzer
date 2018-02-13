@@ -1,3 +1,4 @@
+"use strict";
 var express = require('express');
 var env = require('./environment.json');
 var path = require('path');
@@ -5,10 +6,12 @@ var qs = require('querystring');
 var request = require('request');
 var paths = require('./paths.js');
 var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var mongoose = require('mongoose');
 var api = require('./api');
 var _ = require('underscore');
+var MongoStore = require('connect-mongo')(session);
 var app;
 
 var thisAPI = new api()
@@ -34,33 +37,52 @@ var redirectUri = process.env.REDIRECT_URI || 'http://alexei.com/auth/yahoo/call
 
   //MongoDB
   mongoose.connect(process.env.MONGODB || 'localhost');
+  var db = mongoose.connection;
+  db.once('open', function (callback) {
+    console.log("# Mongo DB:  Connected to server");
+  });
 
   // Setup Express app
   app = express();
   app.set('port', process.env.PORT || 80 );
 
   //View Engine
-  app.set('views', path.join(__dirname, 'views'));
-  app.set('view engine', 'ejs');
+  // app.set('views', path.join(__dirname, 'views'));
+  // app.set('view engine', 'ejs');
 
   // Body Parser
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({extended: false}));
 
+  app.use(cookieParser());
 
   app.use(session({
     secret: 'keyboard cat',
-    resave: false,
-    saveUninitialized: true
+    resave: true,
+    saveUninitialized: true,
+    store: new MongoStore({ mongooseConnection: db })
   }));
 
   // app.use(express.static(path.join(__dirname, 'app')));
 
 app.use(express.static(path.join(__dirname, './dist')));
-app.get('*', (req, res) => {
+app.get(['/', '/app*'], (req, res) => {
   console.log('Serving ', req.url);
-  res.sendFile(__dirname + '/dist/app.html');
+
+  let user = false;
+  if (req.session.user) {
+    user = req.session.user;
+    console.log('user found:    '+ user)
+  }
+
+  res.sendFile(__dirname + '/dist/app.html', {user: user});
 });
+
+app.get('/user', (req, res) => {
+  if (req.session.user && req.session.user.guid) {
+    console.log('/user found user')
+  }
+})
 
 
   // app.get('/', function(req, res) {
