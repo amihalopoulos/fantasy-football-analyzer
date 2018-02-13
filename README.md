@@ -1,3 +1,9 @@
+to run app: 
+1. get mongo running::: mongod
+2. webpack          ::: webpack -d --watch
+3. run SUDO nodemon ::: sudo nodemon
+** also make sure that port 80 points to alexei.com -- important for oauth2 redirect in development
+
 
 TODO
 
