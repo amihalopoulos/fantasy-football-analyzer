@@ -8,7 +8,6 @@ var API = function(options){
 
 API.prototype.fetchLeagues = function(user, cb){
     // url: 'https://fantasysports.yahooapis.com/fantasy/v2/;use_login=1//',
-    console.log(user)
   var leaguesOptions = {
     url: 'https://fantasysports.yahooapis.com/fantasy/v2/;use_login=1//',
     headers: { Authorization: 'Bearer ' + user.accessToken },
