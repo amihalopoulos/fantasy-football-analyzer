@@ -21,19 +21,19 @@ class UserProfileContainer extends Component{
 
   render() {
     const isLoggedIn = this.state.isLoggedIn;
-
+console.log('user profile container component')
     let button = null;
 
-    if (isLoggedIn) {
-      button = <LogoutButton onClick={this.handleLogoutClick} />;
-    } else {
-      // button = <LoginButton onClick={this.handleLoginClick} />;
-      button = <LoginButton />;
-    }
+    // if (isLoggedIn) {
+    //   button = <LogoutButton onClick={this.handleLogoutClick} />;
+    // } else {
+    //   // button = <LoginButton onClick={this.handleLoginClick} />;
+    //   button = <LoginButton />;
+    // }
 
     return <div>
+      <div>here is profile container</div>
       <User isLoggedIn={this.state.isLoggedIn} />
-      {button}
     </div>
   };
 }
