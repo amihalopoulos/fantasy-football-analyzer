@@ -9,6 +9,20 @@ export default (ChildComponent) => {
       hasAuthToken: false,
     }
 
+    componentDidMount() {
+       fetch('/user', {
+          method: 'GET',
+          credentials: 'same-origin'
+        })
+      .then((response) => {
+        console.log('fetch', response)
+        return response.json()
+      })
+      .then(function(data) {
+        console.log(data);  
+      })
+    }
+
     render () {
       console.log('hasAuthToken: ' + this.props.hasAuthToken)
       const { hasAuthToken } = this.props
