@@ -28,6 +28,6 @@ export function fetchUser(){
 export function userLoggedIn(results) {
     return {
         type: 'USER_LOGGED_IN',
-        hasErrored: results
+        payload: results
     };
 }
