@@ -2,7 +2,11 @@ import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 // import UserContainer from '../components/User/user-profile-container';
 import SignIn from '../components/User/login-button';
+import { fetchUser } from '../actions/user.js';
+
 console.log('loaded redux connected(hopefully) container')
+
+
 export default (ChildComponent) => {
   class AuthenticatedComponent extends Component {
     static defaultProps = {
@@ -10,17 +14,7 @@ export default (ChildComponent) => {
     }
 
     componentDidMount() {
-       fetch('/user', {
-          method: 'GET',
-          credentials: 'same-origin'
-        })
-      .then((response) => {
-        console.log('fetch', response)
-        return response.json()
-      })
-      .then(function(data) {
-        console.log(data);  
-      })
+      this.props.dispatch(fetchUser());
     }
 
     render () {
