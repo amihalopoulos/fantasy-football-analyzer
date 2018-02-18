@@ -10,7 +10,7 @@ class UserProfileContainer extends Component{
     this.handleLogoutClick = this.handleLogoutClick.bind(this);
     this.state = {isLoggedIn: false};
   }
-
+  
   handleLoginClick() {
     this.setState({isLoggedIn: true});
   }
