@@ -12,6 +12,10 @@ let store = createStore(
   applyMiddleware(thunk)
 );
 
+store.subscribe( () => {
+  console.log('store changed', store.getState())
+})
+
 render(
   <Provider store={store}>
     <App />
