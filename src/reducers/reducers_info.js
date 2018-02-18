@@ -1,7 +1,8 @@
 const info = (state={}, action) => {
   switch(action.type){
-    // case AUTHORIZED
-    //   return action
+    case 'USER_LOGGED_IN':
+    console.log('action')
+      return action.payload
     default:
       return state
   }

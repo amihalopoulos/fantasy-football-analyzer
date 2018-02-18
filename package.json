@@ -17,9 +17,11 @@
     "express": "^4.16.2",
     "express-session": "^1.15.6",
     "hjs": "0.0.6",
-    "mongoose": "^4.13.7",
+    "mongoose": "^4.13.11",
     "querystring": "^0.2.0",
-    "react-redux": "^5.0.6",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "react-redux": "^5.0.7",
     "react-router-dom": "^4.2.2",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
@@ -32,6 +34,6 @@
     "babel-preset-env": "^1.6.1",
     "babel-preset-react": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
-    "webpack": "^3.10.0"
+    "webpack": "^3.11.0"
   }
 }
