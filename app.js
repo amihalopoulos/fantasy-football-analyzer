@@ -72,8 +72,21 @@ app.get(['/', '/app*'], (req, res) => {
 });
 
 app.get('/user', (req, res) => {
+  var user = req.session.user;
+  var games = false;
   console.log("# Client Username check "+ req.session.user);
-  res.json({user: req.session.user})
+
+  if (user && user.guid) {
+    games = getLeagues(user)
+    console.log('here are the games......: '+games);
+  }
+
+  res.json({
+    user: user,
+    games: games
+  })
+
+
 })
 
 app.get('/logout', function(req, res) {
@@ -259,6 +272,59 @@ app.get('/league/:leagueKey', function(req, res){
 
 
 })
+
+function getLeagues(user){
+  if (!user) {
+    return false
+  }
+
+  if (user && user.guid) {
+
+    return {
+      title: 'Games',
+      user: user,
+      games: user.leagues
+    }
+
+  } else {
+
+    var leaguesOptions = {
+      url: 'https://fantasysports.yahooapis.com/fantasy/v2/users;use_login=1/games;game_keys=371/leagues?format=json',
+      method: 'GET',
+      headers: { Authorization: 'Bearer ' + user.accessToken },
+      rejectUnauthorized: false,
+      json: true
+    }
+
+    request(leaguesOptions, function(err, response, body){
+      if (err) {
+        console.log( err )
+      } else {
+        if (body.error) {
+          console.log(body.error)
+        }
+        var leagues = body.fantasy_content.users['0'].user[1].games['0'].game[1].leagues[0].league;
+
+        user = user;
+
+        User.findOne({ guid: user.guid }, function(err, existingUser) {
+          if (existingUser) {
+            existingUser.leagues = leagues
+            existingUser.save(function(err){
+              console.log(existingUser)
+            })
+          }
+        })
+
+        return {
+          title: 'Games',
+          user: user,
+          games: leagues
+        }
+      }
+    })
+  }
+}
 
 
 app.get('/games', function(req, res){
