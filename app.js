@@ -21,7 +21,8 @@ var userSchema = new mongoose.Schema({
   profileImage: String,
   firstName: String,
   lastName: String,
-  accessToken: String
+  accessToken: String,
+  refreshToken: String
 });
 var User = mongoose.model('User', userSchema);
 var clientId = process.env.CLIENT_ID || env.client_id;

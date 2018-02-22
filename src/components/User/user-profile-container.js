@@ -25,7 +25,7 @@ class UserProfileContainer extends Component{
     }
 
     return <div>
-      <div>here is profile container</div>
+      <User {...this.props}/>
       {button}
     </div>
   };

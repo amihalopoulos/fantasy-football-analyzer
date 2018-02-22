@@ -17,7 +17,8 @@ export function fetchUser(){
       return response.json()
     })
     .then(function(data) {
-      dispatch(userLoggedIn(data))  
+      console.log('user...: '+JSON.stringify(data))
+      dispatch(userLoggedIn(data.user))  
     })
     .catch(error => console.log('error ma fucka: ', error));
   }
