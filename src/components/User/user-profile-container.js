@@ -6,34 +6,27 @@ import User from './user-profile';
 class UserProfileContainer extends Component{
   constructor(props) {
     super(props);
-    this.handleLoginClick = this.handleLoginClick.bind(this);
     this.handleLogoutClick = this.handleLogoutClick.bind(this);
-    this.state = {isLoggedIn: false};
-  }
-  
-  handleLoginClick() {
-    this.setState({isLoggedIn: true});
+    this.state = {user: this.props.user};
   }
 
   handleLogoutClick() {
-    this.setState({isLoggedIn: false});
+    this.setState({user: false});
   }
 
   render() {
-    const isLoggedIn = this.state.isLoggedIn;
-console.log('user profile container component')
+    const isLoggedIn = this.state.user;
     let button = null;
 
-    // if (isLoggedIn) {
-    //   button = <LogoutButton onClick={this.handleLogoutClick} />;
-    // } else {
-    //   // button = <LoginButton onClick={this.handleLoginClick} />;
-    //   button = <LoginButton />;
-    // }
+    if (isLoggedIn) {
+      button = <LogoutButton onClick={this.props.logOutUser} />
+    } else {
+      button = <LoginButton />
+    }
 
     return <div>
       <div>here is profile container</div>
-      <User isLoggedIn={this.state.isLoggedIn} />
+      {button}
     </div>
   };
 }

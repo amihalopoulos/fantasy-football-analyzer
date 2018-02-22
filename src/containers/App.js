@@ -1,15 +1,10 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
-// import UserContainer from '../components/User/user-profile-container';
 import SignIn from '../components/User/login-button';
-import { fetchUser } from '../actions/user.js';
-
+import { fetchUser, logInUser, logOutUser } from '../actions/user.js';
 
 export default (ChildComponent) => {
   class AuthenticatedComponent extends Component {
-    // static defaultProps = {
-    //   hasAuthToken: false,
-    // }
     constructor(props) {
       super(props);
       this.state = {
@@ -23,18 +18,12 @@ export default (ChildComponent) => {
     }
 
     componentWillReceiveProps(nextProps) {
-      console.log('state: ' + JSON.stringify(this.state, nextProps))
       this.setState({user: nextProps.user})
-
-      this.setState({hasAuthToken: nextProps.user ? true : false})
     }
 
     render () {
-      console.log('hasAuthToken: ' + this.props.hasAuthToken)
-      console.log('state: ' + JSON.stringify(this.state))
-
       const { hasAuthToken, user } = this.state
-      return (hasAuthToken || user
+      return (user && user.user && user.user.guid
         ? <ChildComponent {...this.props} />
         : <SignIn />
       )
@@ -51,6 +40,12 @@ export default (ChildComponent) => {
     return {
       fetchUser : () => {
         dispatch(fetchUser());
+      },
+      logInUser : () => {
+        dispatch(logInUser())
+      },
+      logOutUser : () => {
+        dispatch(logOutUser())
       }
     }
   }

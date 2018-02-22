@@ -5,7 +5,6 @@ var env = require('./environment.json');
 var path = require('path');
 var qs = require('querystring');
 var request = require('request');
-var paths = require('./paths.js');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
@@ -76,8 +75,14 @@ app.get('/user', (req, res) => {
   res.json({user: req.session.user})
 })
 
+app.get('/logout', function(req, res) {
+  delete req.session.user;
+  res.json({user: {}});
+});
+
 //Oauth
 app.get('/auth/yahoo', function(req, res) {
+  console.log('auth/yahoo route hit....')
   var authorizationUrl = 'https://api.login.yahoo.com/oauth2/request_auth';
 
   var queryParams = qs.stringify({
@@ -307,11 +312,6 @@ app.get('/games', function(req, res){
       }
     })
   }
-});
-
-app.get('/logout', function(req, res) {
-  delete req.session.user;
-  res.redirect('/');
 });
 
 app.listen(app.get('port'), function() {
