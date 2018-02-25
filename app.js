@@ -71,20 +71,31 @@ app.get(['/', '/app*'], (req, res) => {
   }
 });
 
+
+
 app.get('/user', (req, res) => {
   var user = req.session.user;
   var games = false;
   console.log("# Client Username check "+ req.session.user);
 
   if (user && user.guid) {
-    games = getLeagues(user)
-    console.log('here are the games......: '+games);
+    var gamesPromise = getLeaguesPromise(user);
+    gamesPromise.then(function(result){
+      res.json({
+        user: user,
+        games: result,
+      })
+    }, function(err){
+      console.log(err)
+      res.json({
+        user: user,
+        games: false
+      })
+    }).then(function(result){
+      console.log(result)
+    })
   }
 
-  res.json({
-    user: user,
-    games: games
-  })
 
 
 })
@@ -93,6 +104,49 @@ app.get('/logout', function(req, res) {
   delete req.session.user;
   res.json({user: {}});
 });
+
+function refreshAccessToken(user){
+//this should return a promise that either is successful or isn't
+//should we have a global user variable (let user;) that is updated here? 
+  var refreshToken = user.refreshToken
+
+  var headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': 'Basic ' + new Buffer(clientId + ':' + clientSecret).toString('base64'),
+  };
+  var dataString = 'grant_type=refresh_token&redirect_uri=oob&refresh_token='+refreshToken;
+  var options = {
+      url: 'https://api.login.yahoo.com/oauth2/get_token',
+      method: 'POST',
+      json: true,
+      headers: headers,
+      body: dataString
+  };
+  return new Promise(function(resolve, reject){ 
+    request(options, function(err, response, body) {
+      if (!err && response.statusCode == 200) {
+        console.log('WE REFRESHED THE TOKEN!!!   ' + body);
+        resolve(body)
+      } else {
+        reject(err)
+      }
+    });
+  })
+};
+
+function updateUserInfo(user){
+  User.findOne({ guid: user.guid }, function(err, existingUser) {
+    if (existingUser) {
+      existingUser.accessToken = user.accessToken
+      existingUser.refreshToken = user.refreshToken
+      existingUser.save(function(err){})
+      // req.session.user = existingUser;
+      // req.session.save();
+      // return res.redirect('/');
+    }
+  })
+  return 
+}
 
 //Oauth
 app.get('/auth/yahoo', function(req, res) {
@@ -129,7 +183,7 @@ app.get('/auth/yahoo/callback', function(req, res) {
     var accessToken = body.access_token;
     var refreshToken = body.refresh_token;
     var socialApiUrl = 'https://social.yahooapis.com/v1/user/' + guid + '/profile?format=json';
-
+console.log(JSON.stringify(body))
     var options = {
       url: socialApiUrl,
       headers: { Authorization: 'Bearer ' + accessToken },
@@ -270,21 +324,27 @@ app.get('/league/:leagueKey', function(req, res){
   //   })
   // })
 
-
 })
 
-function getLeagues(user){
+function getLeagueInfoPromise(leaguekey){
+
+}
+// function refreshUser(user){
+//   refreshAccessToken(user).then(function(result){
+//     //if is successful then call this function again, if not exit whole function ==> resolve(false)
+//     console.log(JSON.stringify(result))
+//     // updateUserInfo(result)
+//   })
+// }
+
+function getLeaguesPromise(user){
   if (!user) {
     return false
   }
 
-  if (user && user.guid) {
-
-    return {
-      title: 'Games',
-      user: user,
-      games: user.leagues
-    }
+  if (user && user.leagues) {
+console.log('leagues have already been gotten')
+    return;
 
   } else {
 
@@ -296,32 +356,27 @@ function getLeagues(user){
       json: true
     }
 
-    request(leaguesOptions, function(err, response, body){
-      if (err) {
-        console.log( err )
-      } else {
-        if (body.error) {
-          console.log(body.error)
-        }
-        var leagues = body.fantasy_content.users['0'].user[1].games['0'].game[1].leagues[0].league;
-
-        user = user;
-
-        User.findOne({ guid: user.guid }, function(err, existingUser) {
-          if (existingUser) {
-            existingUser.leagues = leagues
-            existingUser.save(function(err){
-              console.log(existingUser)
+    return new Promise(function(resolve, reject){
+      request(leaguesOptions, function(err, response, body){
+        if (err) {
+          reject(err)
+        } else {
+          if (body.error) {
+            console.log(' ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR  ERROR ' + JSON.stringify(body.error))
+            // refreshUser(user)
+            refreshAccessToken(user)
+            .then(function(result){
+              console.log('access token expired, we refreshed and now need to re-fetch leagure request')
+            })
+            .catch(function(err){
+              console.log('tried to refresh access token, still didnt work....:  '+err)
             })
           }
-        })
+          var leagues = body.fantasy_content ? body.fantasy_content.users['0'].user[1].games['0'].game[1].leagues[0].league : false;
 
-        return {
-          title: 'Games',
-          user: user,
-          games: leagues
+          resolve(leagues)
         }
-      }
+      })
     })
   }
 }
@@ -357,8 +412,7 @@ app.get('/games', function(req, res){
         if (body.error) {
           console.log(body.error)
         }
-        var leagues = body.fantasy_content.users['0'].user[1].games['0'].game[1].leagues[0].league;
-
+        var leagues = body.fantasy_content ? body.fantasy_content.users['0'].user[1].games['0'].game[1].leagues[0].league : false;
         user = req.session.user;
 
         User.findOne({ guid: user.guid }, function(err, existingUser) {

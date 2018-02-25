@@ -9,12 +9,13 @@ export default (ChildComponent) => {
       super(props);
       this.state = {
         hasAuthToken : false,
-        user: this.props.user
+        user: this.props.user,
+        isLoading: false
       }
     }
 
     componentDidMount() {
-      this.props.fetchUser();
+      this.props.fetchUser()
     }
 
     componentWillReceiveProps(nextProps) {
@@ -22,8 +23,9 @@ export default (ChildComponent) => {
     }
 
     render () {
+      console.log(this.props)
       const { hasAuthToken, user } = this.state
-      return (user && user.guid
+      return (user && user.user && user.user.guid
         ? <ChildComponent {...this.props} />
         : <SignIn />
       )
@@ -33,6 +35,7 @@ export default (ChildComponent) => {
   const mapStateToProps = state => {
     return {
       user : state.user,
+      games: state.games
     };
   }
 
