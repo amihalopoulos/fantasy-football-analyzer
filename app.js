@@ -183,7 +183,6 @@ app.get('/auth/yahoo/callback', function(req, res) {
     var accessToken = body.access_token;
     var refreshToken = body.refresh_token;
     var socialApiUrl = 'https://social.yahooapis.com/v1/user/' + guid + '/profile?format=json';
-console.log(JSON.stringify(body))
     var options = {
       url: socialApiUrl,
       headers: { Authorization: 'Bearer ' + accessToken },
@@ -294,6 +293,7 @@ app.get('/league/:leagueKey', function(req, res){
     json: true
   }
 
+
   // request(individualRosterOpts, function(err, response, body){
   //   //team[1].roster['0'].players['0'].player[0].name
 
@@ -329,13 +329,16 @@ app.get('/league/:leagueKey', function(req, res){
 function getLeagueInfoPromise(leaguekey){
 
 }
-// function refreshUser(user){
-//   refreshAccessToken(user).then(function(result){
-//     //if is successful then call this function again, if not exit whole function ==> resolve(false)
-//     console.log(JSON.stringify(result))
-//     // updateUserInfo(result)
-//   })
-// }
+
+//------------------------------------------------------------------------------------------ not being used currently
+function refreshUser(user){
+  refreshAccessToken(user).then(function(result){
+    //if is successful then call this function again, if not exit whole function ==> resolve(false)
+    console.log(JSON.stringify(result))
+    // updateUserInfo(result)
+  })
+}
+//------------------------------------------------------------------------------------------
 
 function getLeaguesPromise(user){
   if (!user) {

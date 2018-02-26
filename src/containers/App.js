@@ -23,7 +23,6 @@ export default (ChildComponent) => {
     }
 
     render () {
-      console.log(this.props)
       const { hasAuthToken, user } = this.state
       return (user && user.user && user.user.guid
         ? <ChildComponent {...this.props} />

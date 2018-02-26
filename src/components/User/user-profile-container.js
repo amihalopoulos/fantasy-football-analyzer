@@ -27,9 +27,9 @@ class UserProfileContainer extends Component{
     } else {
       button = <LoginButton />
     }
-console.log(this.state)
+
     return <div>
-      <User {...this.props}/>
+      <User user={this.props.user.user}/>
       <LeaguesList {...this.props}/>
 
       {button}
