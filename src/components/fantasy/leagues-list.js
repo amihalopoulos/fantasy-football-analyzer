@@ -16,7 +16,11 @@ class LeaguesList extends Component{
 console.log(leagues)
       return (
         this.props.user.games
-        ? {leagues}
+        ? this.props.user.games.map(function(object) {
+            return (
+              <League key={object.league_key} name={object.name} />
+            )
+          })
         : <div>no league! </div> 
       )
   };
