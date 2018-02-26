@@ -24,22 +24,6 @@ export function fetchUser(){
   }
 }
 
-export function logInUser(){
-  return (dispatch) => {
-    return fetch('/auth/yahoo', {
-        method: 'GET',
-        credentials: 'same-origin'
-      })
-    .then((response) => {
-      return response.json()
-    })
-    .then(function(data) {
-      dispatch(userLoggedIn(data))  
-    })
-    .catch(error => console.log('error ma fucka: ', error));
-  }
-}
-
 export function logOutUser(){
   return (dispatch) => {
 

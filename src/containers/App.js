@@ -43,9 +43,6 @@ export default (ChildComponent) => {
       fetchUser : () => {
         dispatch(fetchUser());
       },
-      logInUser : () => {
-        dispatch(logInUser())
-      },
       logOutUser : () => {
         dispatch(logOutUser())
       }

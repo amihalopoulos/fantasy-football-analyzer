@@ -7,7 +7,6 @@ import requireAuthentication from '../containers/app';
 class App extends Component{
     render() {
         return <div className="app-container">
-        <p>hello this is app.js</p>
         <BrowserRouter>
           <Route component={requireAuthentication(User)}>
           </Route>

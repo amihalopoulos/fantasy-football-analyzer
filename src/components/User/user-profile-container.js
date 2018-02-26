@@ -28,6 +28,7 @@ class UserProfileContainer extends Component{
       button = <LoginButton />
     }
 
+
     return <div>
       <User user={this.props.user.user}/>
       <LeaguesList {...this.props}/>
