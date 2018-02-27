@@ -9,7 +9,6 @@ var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var mongoose = require('mongoose');
-var api = require('./api');
 var _ = require('underscore');
 var MongoStore = require('connect-mongo')(session);
 var app;
@@ -91,6 +90,22 @@ app.get('/logout', function(req, res) {
   globUser = undefined;
   res.json({user: {}});
 });
+
+app.get('/league/:leagueKey', function(req, res){
+  var leagueInfo = getLeagueInfoPromise(req.params.leagueKey)
+  leagueInfo.then(function(result){
+    res.json({
+      user: globUser,
+      league: result
+    })
+  }, function(err){
+    console.log(err)
+    res.json({
+      user: user,
+      games: false
+    })
+  })
+})
 
 //Oauth
 app.get('/auth/yahoo', function(req, res) {
@@ -220,6 +235,27 @@ function refreshAccessToken(){
   })
 };
 
+function getLeagueInfoPromise(leagueKey){
+  var options = {
+    url: 'https://fantasysports.yahooapis.com/fantasy/v2/league/'+leagueKey+'/teams/roster/players?format=json',
+    method: 'GET',
+    headers: { Authorization: 'Bearer ' },
+    rejectUnauthorized: false,
+    json: true
+  }
+
+  return retryOnce(() => {
+    return promiseRequest(options)
+      .then(function(results){
+        console.log(JSON.stringify(results))
+        return results
+      })
+      .catch(err => {
+        return Promise.reject(err)
+      })
+  }, refreshAccessToken)
+}
+
 function getLeaguesPromise(){
   var leaguesOptions = {
     url: 'https://fantasysports.yahooapis.com/fantasy/v2/users;use_login=1/games;game_keys=371/leagues?format=json',
@@ -240,7 +276,6 @@ function getLeaguesPromise(){
       })
   }, refreshAccessToken)
 }
-
 
 app.listen(app.get('port'), function() {
   console.log('app listening on port ' + app.get('port'))
@@ -298,6 +333,8 @@ app.get('/games', function(req, res){
     })
   }
 });
+
+
 
 
 app.get('/league/:leagueKey', function(req, res){
