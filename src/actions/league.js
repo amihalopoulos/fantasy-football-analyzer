@@ -10,7 +10,9 @@ export function fetchLeagueData(leagueKey){
     .then(function(data) {
       dispatch(fetchedLeagueData(data))  
     })
-    .catch(error => console.log('error ma fucka: ', error));
+    .catch(error => {
+      console.log('error ma fucka: ', error)
+    });
   }
 }
 

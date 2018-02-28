@@ -1,12 +1,12 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import SignIn from '../components/User/login-button';
-import { fetchUser, logInUser, logOutUser, hasFetched } from '../actions/user.js';
+import { fetchUser, logInUser, logOutUser, isFetching } from '../actions/user.js';
 import { fetchLeagueData } from '../actions/league.js';
 
 export default (ChildComponent) => {
   class AuthenticatedComponent extends Component {
-    
+
     componentDidMount() {
       this.props.fetchUser()
     }
@@ -35,13 +35,13 @@ export default (ChildComponent) => {
   const mapDispatchToProps = (dispatch, ownProps) => {
     return {
       fetchUser : () => {
-        dispatch(fetchUser()).then(function(){dispatch(hasFetched({isLoading: false}))})
+        dispatch(fetchUser()).then(function(){dispatch(isFetching({isLoading: false}))})
       },
       fetchLeagueData: leagueKey => {
         dispatch(fetchLeagueData(leagueKey));
       },
       logOutUser : () => {
-        dispatch(logOutUser())
+        dispatch(logOutUser()).then(function(){dispatch(isFetching({isLoading: false}))})
       }
     }
   }

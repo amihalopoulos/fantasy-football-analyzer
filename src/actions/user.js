@@ -10,10 +10,11 @@ export function fetchUser(){
     })
     .then(function(data) {
       dispatch(userLoggedIn(data))
-      // dispatch(hasFetched({isLoading: false}))
-
     })
-    .catch(error => console.log('error ma fucka: ', error));
+    .catch(error => {
+      dispatch(isFetching({isLoading: false}))
+      console.log('error ma fucka: ', error)
+    });
   }
 }
 
@@ -38,12 +39,6 @@ export function fetchedLeagueData(results) {
   debugger
     return {
         type: 'FETCHED_LEAGUE_DATA',
-        payload: results
-    };
-}
-export function hasFetched(results) {
-    return {
-        type: 'STOP_LOADING',
         payload: results
     };
 }

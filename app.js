@@ -82,6 +82,10 @@ app.get('/user', (req, res) => {
       })
     }).then(function(result){
     })
+  } else {
+    res.json({
+      user: false
+    })
   }
 })
 
@@ -198,6 +202,7 @@ function retryOnce(func, recoverFunc){
 }
 
 function promiseRequest(requestOpts){
+  console.log('requesting...' + requestOpts.url)
   requestOpts.headers.Authorization += globUser.accessToken;
   return new Promise(function(resolve, reject){
     request(requestOpts, function(err, res, body){
