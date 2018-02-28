@@ -5,21 +5,9 @@ import User from './user-profile';
 import LeaguesList from '../fantasy/leagues-list'
 
 class UserProfileContainer extends Component{
-  constructor(props) {
-    super(props);
-    this.handleLogoutClick = this.handleLogoutClick.bind(this);
-    this.state = {
-      user: this.props.user,
-      games: this.props.games,
-    };
-  }
-
-  handleLogoutClick() {
-    this.setState({user: false});
-  }
 
   render() {
-    const isLoggedIn = this.state.user;
+    const isLoggedIn = this.props.user;
     let button = null;
 
     if (isLoggedIn) {

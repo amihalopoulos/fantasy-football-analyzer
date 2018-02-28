@@ -1,12 +1,3 @@
-export const INFO_FETCHED = 'INFO_FETCHED';
-
-export function loadInfo(results) {
-  return {
-    type : INFO_FETCHED,
-    payload : results
-  }
-}
-
 export function fetchUser(){
   return (dispatch) => {
     return fetch('/user', {
@@ -17,7 +8,7 @@ export function fetchUser(){
       return response.json()
     })
     .then(function(data) {
-      console.log('user...: '+JSON.stringify(data))
+      // console.log('user...: '+JSON.stringify(data))
       dispatch(userLoggedIn(data))  
     })
     .catch(error => console.log('error ma fucka: ', error));
@@ -41,6 +32,13 @@ export function logOutUser(){
   }
 }
 
+export function fetchedLeagueData(results) {
+  debugger
+    return {
+        type: 'FETCHED_LEAGUE_DATA',
+        payload: results
+    };
+}
 export function userLoggedIn(results) {
     return {
         type: 'LOG_IN_SUCCESS',

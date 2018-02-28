@@ -11,6 +11,7 @@ var session = require('express-session');
 var mongoose = require('mongoose');
 var _ = require('underscore');
 var MongoStore = require('connect-mongo')(session);
+var Utils = require('./utils');
 var app;
 
 //MongoDB
@@ -63,11 +64,10 @@ app.get(['/', '/app*'], (req, res) => {
 
 app.get('/user', (req, res) => {
   var user = req.session.user;
+  globUser = user;
   var games = false;
-  console.log("# Client Username check "+ req.session.user);
 
   if (user && user.guid) {
-    globUser = user;
     var gamesPromise = getLeaguesPromise();
     gamesPromise.then(function(result){
       res.json({
@@ -92,10 +92,13 @@ app.get('/logout', function(req, res) {
 });
 
 app.get('/league/:leagueKey', function(req, res){
+  console.log('FETCHING LEAGUE INFO...')
+  // console.log(req.params.leagueKey)
   var leagueInfo = getLeagueInfoPromise(req.params.leagueKey)
   leagueInfo.then(function(result){
+    var data = Utils.formatLeagueInfo(result)
+    console.log(data)
     res.json({
-      user: globUser,
       league: result
     })
   }, function(err){
@@ -247,7 +250,7 @@ function getLeagueInfoPromise(leagueKey){
   return retryOnce(() => {
     return promiseRequest(options)
       .then(function(results){
-        console.log(JSON.stringify(results))
+        // console.log(JSON.stringify(results))
         return results
       })
       .catch(err => {
@@ -357,31 +360,7 @@ app.get('/league/:leagueKey', function(req, res){
   }
   request(allRosterOpts, function(err, response, body){
     console.log(body.fantasy_content.league[1].teams)
-    var rawTeams = body.fantasy_content.league[1].teams;
-    var count = body.fantasy_content.league[1].teams.count;
-    var teams = [];
-    for (var i = 0; i < count; i++) {
-      var x = ''+i
-      var t = rawTeams[x].team
-      teams.push(t)
-    }
-    console.log(teams.length)
-    var final = [];
-    for (var i = 0; i < teams.length; i++) {
-      var team = [];
-      var normalized = [];
-      var rawRoster = teams[i][1].roster['0'].players;
-      var numPlayers = Object.keys(rawRoster)
-      for (var y = 0; y < numPlayers.length; y++) {
-        var x = ''+y
-        if (rawRoster[x] && rawRoster[x].player) {
-          var player = {}
-          player.name = rawRoster[x].player[0][2].name
-          normalized.push(player)
-        }
-      }
-      final.push(normalized)
-    }
+
     res.render('league', {
       title: 'League',
       user: req.session.user,

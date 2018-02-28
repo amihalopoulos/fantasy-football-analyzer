@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import SignIn from '../components/User/login-button';
 import { fetchUser, logInUser, logOutUser } from '../actions/user.js';
+import { fetchLeagueData } from '../actions/league.js';
 
 export default (ChildComponent) => {
   class AuthenticatedComponent extends Component {
@@ -9,12 +10,15 @@ export default (ChildComponent) => {
       super(props);
       this.state = {
         hasAuthToken : false,
-        user: this.props.user,
+        user: {},
+        games: [],
+        selectedLeague: false,
         isLoading: false
       }
     }
 
     componentDidMount() {
+      console.log('mounting...')
       this.props.fetchUser()
     }
 
@@ -31,10 +35,13 @@ export default (ChildComponent) => {
     }
   }
 
-  const mapStateToProps = state => {
+  const mapStateToProps = (state) => {
+    console.log(state)
     return {
       user : state.user,
-      games: state.games
+      games: state.user.games,
+      league: state.league,
+      selectedLeague: state.selectedLeague
     };
   }
 
@@ -42,6 +49,9 @@ export default (ChildComponent) => {
     return {
       fetchUser : () => {
         dispatch(fetchUser());
+      },
+      fetchLeagueData: leagueKey => {
+        dispatch(fetchLeagueData(leagueKey));
       },
       logOutUser : () => {
         dispatch(logOutUser())
