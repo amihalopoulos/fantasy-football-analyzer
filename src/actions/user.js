@@ -1,5 +1,6 @@
 export function fetchUser(){
   return (dispatch) => {
+    dispatch(isFetching({isLoading: true}))
     return fetch('/user', {
         method: 'GET',
         credentials: 'same-origin'
@@ -8,8 +9,9 @@ export function fetchUser(){
       return response.json()
     })
     .then(function(data) {
-      // console.log('user...: '+JSON.stringify(data))
-      dispatch(userLoggedIn(data))  
+      dispatch(userLoggedIn(data))
+      // dispatch(hasFetched({isLoading: false}))
+
     })
     .catch(error => console.log('error ma fucka: ', error));
   }
@@ -36,6 +38,18 @@ export function fetchedLeagueData(results) {
   debugger
     return {
         type: 'FETCHED_LEAGUE_DATA',
+        payload: results
+    };
+}
+export function hasFetched(results) {
+    return {
+        type: 'STOP_LOADING',
+        payload: results
+    };
+}
+export function isFetching(results) {
+    return {
+        type: 'START_LOADING',
         payload: results
     };
 }

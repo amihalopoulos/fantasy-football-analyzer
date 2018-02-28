@@ -33,7 +33,7 @@ class LeaguesList extends Component{
           content = <div>need to format league info</div>
         }
       } else {
-        content = <div>no league!</div>
+        content = <div>Couldn't find a league!</div>
       }
 
 

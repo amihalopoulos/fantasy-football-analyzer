@@ -13,7 +13,7 @@ let store = createStore(
 );
 
 store.subscribe( () => {
-  console.log('store changed', store.getState())
+  // console.log('store changed', store.getState())
 })
 
 render(

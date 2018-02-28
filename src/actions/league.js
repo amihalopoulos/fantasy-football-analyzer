@@ -1,6 +1,5 @@
 export function fetchLeagueData(leagueKey){
   return (dispatch) => {
-    console.log('fetchLeagueData action....: ${leagueKey}')
     return fetch('/league/'+leagueKey, {
         method: 'GET',
         credentials: 'same-origin'
