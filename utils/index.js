@@ -2,9 +2,6 @@ var _ = require('underscore')
 
 // export default Utils = {
 var Utils = {
-  normalizePlayerStats: function(player){
-
-  },
   normalizeTeams: function(league, stats, teamStats){
     var teamRosters = this.formatTeamRosters(league);
     var stats = this.flattenStats(stats);
