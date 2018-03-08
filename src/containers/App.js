@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import SignIn from '../components/User/login-button';
 import { fetchUser, logInUser, logOutUser, isFetching } from '../actions/user.js';
-import { fetchLeagueData } from '../actions/league.js';
+import { fetchLeagueData, fetchLeagueStats } from '../actions/league.js';
 
 export default (ChildComponent) => {
   class AuthenticatedComponent extends Component {
@@ -28,6 +28,7 @@ export default (ChildComponent) => {
       user : state.user,
       games: state.user.games,
       league: state.league,
+      leagueStats: state.leagueStats,
       isLoading: state.loadingStatus.isLoading
     };
   }
@@ -38,7 +39,7 @@ export default (ChildComponent) => {
         dispatch(fetchUser()).then(function(){dispatch(isFetching({isLoading: false}))})
       },
       fetchLeagueData: leagueKey => {
-        dispatch(fetchLeagueData(leagueKey));
+        dispatch(fetchLeagueData(leagueKey))
       },
       logOutUser : () => {
         dispatch(logOutUser()).then(function(){dispatch(isFetching({isLoading: false}))})

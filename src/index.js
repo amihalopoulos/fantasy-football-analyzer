@@ -6,6 +6,7 @@ import thunk from 'redux-thunk'
 import rootReducer from './reducers'
 
 import App from './components/app';
+import './styles/index.css';
 
 let store = createStore(
   rootReducer,
@@ -13,7 +14,7 @@ let store = createStore(
 );
 
 store.subscribe( () => {
-  // console.log('store changed', store.getState())
+  console.log('store changed', store.getState())
 })
 
 render(

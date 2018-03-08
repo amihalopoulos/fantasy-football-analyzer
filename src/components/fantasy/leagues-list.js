@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import LeagueListItem from './league-list-item'
+import Utils from '../../../utils'
 
 class LeaguesList extends Component{
   constructor(props) {
@@ -29,7 +30,10 @@ class LeaguesList extends Component{
           content = <div>Loading League ... </div>
         } else {
           // let info = Utils.formatLeagueInfo(this.props.league)
-          // console.log(info)
+          // let formattedData = Utils.formatLeagueInfo(this.props.league.league)
+          console.log(this.props.league)
+          console.log(Utils.normalizeRosters(this.props.league.league, this.props.league.stats))
+
           content = <div>need to format league info</div>
         }
       } else {

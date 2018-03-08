@@ -16,9 +16,10 @@ class UserProfileContainer extends Component{
       button = <LoginButton />
     }
 
+    let league = this.props.league.league ? this.props.league.league.fantasy_content.league['0'].name : false
 
     return <div>
-      <User user={this.props.user.user}/>
+      <User user={this.props.user.user} leagueName={league}/>
       <LeaguesList {...this.props}/>
 
       {button}

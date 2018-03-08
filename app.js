@@ -95,21 +95,45 @@ app.get('/logout', function(req, res) {
   res.json({user: {}});
 });
 
+// app.get('/league-stats/:leagueKey', function(req, res){
+//   console.log('FETCHING LEAGUE STATS...')
+//   // console.log(req.params.leagueKey)
+//   var leagueStats = getLeagueStatsPromise(req.params.leagueKey)
+//   leagueStats.then(function(result){
+//     res.json(result)
+//   }, function(err){
+//     console.log(err)
+//     res.json({
+//       user: user,
+//       games: false
+//     })
+//   })
+// })
+
 app.get('/league/:leagueKey', function(req, res){
   console.log('FETCHING LEAGUE INFO...')
-  // console.log(req.params.leagueKey)
-  var leagueInfo = getLeagueInfoPromise(req.params.leagueKey)
+    
+  var leagueInfo = getLeagueInfoPromise(req.params.leagueKey);
   leagueInfo.then(function(result){
-    var data = Utils.formatLeagueInfo(result)
-    console.log(data)
-    res.json({
-      league: result
-    })
-  }, function(err){
-    console.log(err)
-    res.json({
-      user: user,
-      games: false
+    var numTeams = result.fantasy_content.league[0].num_teams;
+    var numRequests = Math.ceil((numTeams*16)/25);
+    var statsRequests = [];
+
+    for (var i = 0; i < numRequests+1; i++) {
+      statsRequests.push(getLeagueStatsPromise(req.params.leagueKey, i*25))
+    }
+
+    Promise.all(statsRequests).then(function(data){
+      res.json({
+        league: result,
+        stats: data
+      })
+    }).catch(function(error){
+      console.log(error)
+      res.json({
+        user: user,
+        games: false
+      })
     })
   })
 })
@@ -243,9 +267,9 @@ function refreshAccessToken(){
   })
 };
 
-function getLeagueInfoPromise(leagueKey){
+function getLeagueStatsPromise(leagueKey, start){
   var options = {
-    url: 'https://fantasysports.yahooapis.com/fantasy/v2/league/'+leagueKey+'/teams/roster/players?format=json',
+    url: 'https://fantasysports.yahooapis.com/fantasy/v2/league/'+leagueKey+'/players;status=T;start='+start+'/stats?format=json',
     method: 'GET',
     headers: { Authorization: 'Bearer ' },
     rejectUnauthorized: false,
@@ -256,6 +280,26 @@ function getLeagueInfoPromise(leagueKey){
     return promiseRequest(options)
       .then(function(results){
         // console.log(JSON.stringify(results))
+        return results
+      })
+      .catch(err => {
+        return Promise.reject(err)
+      })
+  }, refreshAccessToken)
+}
+
+function getLeagueInfoPromise(leagueKey){
+  var options = {
+    url: 'https://fantasysports.yahooapis.com/fantasy/v2/league/'+leagueKey+'/teams/roster/players/?format=json',
+    method: 'GET',
+    headers: { Authorization: 'Bearer ' },
+    rejectUnauthorized: false,
+    json: true
+  }
+
+  return retryOnce(() => {
+    return promiseRequest(options)
+      .then(function(results){
         return results
       })
       .catch(err => {
