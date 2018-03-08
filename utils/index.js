@@ -33,6 +33,8 @@ var Utils = {
           player.points = playerList[key].player[1].player_points
           player.stats = playerList[key].player[1].player_stats
           final.push(player)
+        } else {
+          console.log('missing:', key, playerList[key])
         }
       }
     }
