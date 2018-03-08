@@ -5,9 +5,10 @@ var Utils = {
   normalizePlayerStats: function(player){
 
   },
-  normalizeRosters: function(league, stats){
+  normalizeTeams: function(league, stats, teamStats){
     var teamRosters = this.formatTeamRosters(league);
     var stats = this.flattenStats(stats);
+    var teamStats = this.normalizeTeamStats(teamStats);
 
     for (var i = 0; i < teamRosters.length; i++) {
       for (var x = 0; x < teamRosters[i].roster.length; x++) {
@@ -15,8 +16,20 @@ var Utils = {
         teamRosters[i].roster[x].stats = playerStats.stats;
         teamRosters[i].roster[x].points = playerStats.points;
       }
+      var teamPoints = _.findWhere(teamStats, {team_key: teamRosters[i].team_key})
+      teamRosters[i].team_points = teamPoints ? teamPoints.points : false;
     }
     return teamRosters
+  },
+  normalizeTeamStats: function(teamStats){
+    var final = [];
+    for (var i = 0; i < teamStats.length; i++) {
+      var team = {};
+      team.team_key = teamStats[i].fantasy_content.team[0][0].team_key
+      team.points = teamStats[i].fantasy_content.team[1].team_points.total
+      final.push(team)
+    }
+    return final
   },
   flattenStats: function(statArray){
     var final = [];

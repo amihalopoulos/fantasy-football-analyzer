@@ -32,7 +32,7 @@ class LeaguesList extends Component{
           // let info = Utils.formatLeagueInfo(this.props.league)
           // let formattedData = Utils.formatLeagueInfo(this.props.league.league)
           console.log(this.props.league)
-          console.log(Utils.normalizeRosters(this.props.league.league, this.props.league.stats))
+          console.log(Utils.normalizeTeams(this.props.league.league, this.props.league.stats, this.props.league.teamStats))
 
           content = <div>need to format league info</div>
         }
