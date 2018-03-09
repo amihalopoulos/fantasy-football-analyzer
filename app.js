@@ -52,9 +52,7 @@ app.use(session({
 }));
 app.use(express.static(path.join(__dirname, './dist')));
 
-
 let globUser;
-
 
 //express routes
 app.get(['/', '/app*'], (req, res) => {
@@ -99,42 +97,58 @@ app.get('/logout', function(req, res) {
 
 app.get('/league/:leagueKey', function(req, res){
   console.log('FETCHING LEAGUE INFO...')
-    
-  var leagueInfo = yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/teams/roster/players/?format=json');
-  leagueInfo.then(function(result){
-    var numTeams = result.fantasy_content.league[0].num_teams;
-    var numRequests = Math.ceil((numTeams*16)/25);
-    var statsRequests = [];
-
-    for (var i = 0; i < numRequests+1; i++) {
-      statsRequests.push(yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/players;status=T;start='+i*25+'/stats?format=json'))
+  var leagueSettings = yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/settings/?format=json')
+  leagueSettings.then(function(settings){
+    var formattedSettings = {}
+    var numRosterSpots = 0;
+    var roster = settings.fantasy_content.league[1].settings[0].roster_positions;
+    for (var i = 0; i < roster.length; i++) {
+      numRosterSpots += roster[i].roster_position.count
     }
+    var formattedSettings = {
+      roster: settings.fantasy_content.league[1].settings[0].roster_positions,
+      statCategories: settings.fantasy_content.league[1].settings[0].stat_categories,
+      statModifiers: settings.fantasy_content.league[1].settings[0].stat_modifiers,
+      rosterCount: numRosterSpots
+    }
+    var leagueInfo = yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/teams/roster/players/?format=json');
+    leagueInfo.then(function(result){
+      var numTeams = result.fantasy_content.league[0].num_teams;
+      var numRequests = Math.ceil((numTeams*numRosterSpots)/25);
+      var statsRequests = [];
 
-    var teamStatRequests = [];
-    var teams = result.fantasy_content.league[1].teams;
-    for (var key in teams){
-      if (key !== 'count') {
-        teamStatRequests.push(yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/team/'+teams[key].team[0][0].team_key+'/stats;type=season?format=json'))
+      for (var i = 0; i < numRequests+1; i++) {
+        statsRequests.push(yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/players;status=T;start='+i*25+'/stats?format=json'))
       }
-    }
 
-    Promise.all(statsRequests).then(function(data){
-      Promise.all(teamStatRequests).then(function(d){
-        res.json({
-          league: result,
-          stats: data,
-          teamStats: d
+      var teamStatRequests = [];
+      var teams = result.fantasy_content.league[1].teams;
+      for (var key in teams){
+        if (key !== 'count') {
+          teamStatRequests.push(yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/team/'+teams[key].team[0][0].team_key+'/stats;type=season?format=json'))
+        }
+      }
+
+      Promise.all(statsRequests).then(function(data){
+        Promise.all(teamStatRequests).then(function(d){
+          res.json({
+            settings: formattedSettings,
+            league: result,
+            stats: data,
+            teamStats: d
+          })
         })
-      })
 
-    }).catch(function(error){
-      console.log(error)
-      res.json({
-        user: user,
-        games: false
+      }).catch(function(error){
+        console.log(error)
+        res.json({
+          user: user,
+          games: false
+        })
       })
     })
   })
+
 })
 
 //Oauth

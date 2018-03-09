@@ -10,19 +10,19 @@ class UserProfileContainer extends Component{
     const isLoggedIn = this.props.user;
     let button = null;
 
-    if (isLoggedIn) {
-      button = <LogoutButton onClick={this.props.logOutUser} />
-    } else {
-      button = <LoginButton />
-    }
+    // if (isLoggedIn) {
+    //   button = <LogoutButton onClick={this.props.logOutUser} />
+    // } else {
+    //   button = <LoginButton />
+    // }
 
     let league = this.props.league.league ? this.props.league.league.fantasy_content.league['0'].name : false
+      // {button}
 
     return <div>
-      <User user={this.props.user.user} leagueName={league}/>
+      <User user={this.props.user.user} logOutUser={this.props.logOutUser} leagueName={league}/>
       <LeaguesList {...this.props}/>
 
-      {button}
     </div>
   };
 }

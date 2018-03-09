@@ -7,6 +7,22 @@ var Utils = {
     var stats = this.flattenStats(stats);
     var teamStats = this.normalizeTeamStats(teamStats);
 
+    // return teamRosters.map(function(roster){
+    //   if (roster && roster.roster) {
+    //     var newRoster = roster.roster.map(function(player){
+    //       if (player && player.player_key) {
+    //         var playerStats = _.findWhere(stats, {player_key: player.player_key})
+    //         player.stats = playerStats.stats;
+    //         player.points = playerStats.points;
+    //         return player
+    //       }
+    //     })
+    //     var teamPoints = _.findWhere(teamStats, {team_key: roster.team_key})
+    //     newRoster.team_points = teamPoints ? teamPoints.points : false;
+    //     return newRoster
+    //   }
+    // })
+
     for (var i = 0; i < teamRosters.length; i++) {
       for (var x = 0; x < teamRosters[i].roster.length; x++) {
         var playerStats = _.findWhere(stats, {player_key: teamRosters[i].roster[x].player_key})
@@ -17,6 +33,7 @@ var Utils = {
       teamRosters[i].team_points = teamPoints ? teamPoints.points : false;
     }
     return teamRosters
+
   },
   normalizeTeamStats: function(teamStats){
     var final = [];

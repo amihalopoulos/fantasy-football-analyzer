@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 class LoginButton extends Component{
 
     render() {
-        return <a href="" onClick={this.props.onClick}> 
+        return <a className="log-out-button" href="" onClick={this.props.onClick}> 
           Logout!
         </a>
 

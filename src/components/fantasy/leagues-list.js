@@ -29,8 +29,6 @@ class LeaguesList extends Component{
         if (!this.props.league.league) {
           content = <div>Loading League ... </div>
         } else {
-          // let info = Utils.formatLeagueInfo(this.props.league)
-          // let formattedData = Utils.formatLeagueInfo(this.props.league.league)
           console.log(this.props.league)
           console.log(Utils.normalizeTeams(this.props.league.league, this.props.league.stats, this.props.league.teamStats))
 
@@ -42,7 +40,7 @@ class LeaguesList extends Component{
 
 
 
-      return <div>
+      return <div className="league-list">
         {header}
         {content}
       </div>

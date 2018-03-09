@@ -1,17 +1,28 @@
 import React, { Component } from 'react';
+import LoginButton from './login-button';
+import LogoutButton from './logout-button';
 
 class User extends Component{
 
   render() {
-      let text = this.props && this.props.user && this.props.user.firstName ? this.props.user.firstName + ' / Fantasy Football' : 'not logged in';
-      const { leagueName } = this.props
+    let button;
+    let text;
+    if (this.props && this.props.user && this.props.user.firstName) {
+      text = this.props.user.firstName + ' / Fantasy Football'
+      button = <LogoutButton onClick={this.props.logOutUser} />
+    } else {
+      button = <LoginButton />
+      text = 'not logged in'
+    }
+    const { leagueName } = this.props
 
-      if (leagueName) {
-        text += ' / '+ leagueName
-      }
-      return <div>
-        {text}
-      </div>
+    if (leagueName) {
+      text += ' / '+ leagueName
+    }
+    return <div className="user-nav">
+      {text}
+      {button}
+    </div>
   };
 }
 

@@ -1,4 +1,22 @@
 html, body {
     font-family: sans-serif;
-    background-color: #dddddd;
+    background-color: #FEFCD7
+}
+
+.user-nav{
+  background-color: #6A8347;
+  height: 22px;
+  line-height: 22px;
+  padding: 10px 20px;
+  color: #FEFCD7;
+}
+
+.log-out-button{
+  float: right;
+}
+
+.league-list{
+  width: 100%;
+  text-align: center;
+  padding-top: 50px;
 }
