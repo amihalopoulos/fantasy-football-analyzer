@@ -1,4 +1,4 @@
-#Yahoo Fantasy Football Helper
+# Yahoo Fantasy Football Helper
 
 ## GOAL
 1. analyze a fantasy team against that team's league by finding which position is weak and offer trade suggestions with another team that is strong in that position and weak in a position where you are strong.
