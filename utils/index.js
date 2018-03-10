@@ -14,7 +14,6 @@ var Utils = {
         player.points = playerStats.points ? +playerStats.points.total : 0;
         return player
       })
-
       var teamPoints = _.findWhere(teamStats, {team_key: team.team_key})
       team.team_points = teamPoints ? teamPoints.points : false;
       return team
@@ -55,31 +54,25 @@ var Utils = {
   },
   formatTeamRosters: function(data){
     var rawTeams = data.fantasy_content.league[1].teams;
-    var count = data.fantasy_content.league[1].teams.count;
     var teams = [];
-    for (var i = 0; i < count; i++) {
-      var x = ''+i
-      var t = rawTeams[x].team
-      teams.push(t)
+
+    for (var key in rawTeams){
+      if (rawTeams[key].team) {
+        teams.push(rawTeams[key].team)
+      }
     }
 
-    var finalObj = {
-      leagueSettings: data.fantasy_content.league[0],
-      rosters: []
-    }
-
-    var final = [];
-    for (var i = 0; i < teams.length; i++) {
+    return teams.map(team => {
       var obj = {
-        team_key: teams[i][0][0]['team_key'],
-        team_id: teams[i][0][1]['team_id'],
-        name: teams[i][0][2]['name'],
-        logoUrl: teams[i][0][5]['team_logos'][0]['team_logo']['url'],
-        owner_name: teams[i][0][19]['managers'][0]['manager']['nickname'],
-        owner_guid: teams[i][0][19]['managers'][0]['manager']['guid'],
+        team_key: team[0][0]['team_key'],
+        team_id: team[0][1]['team_id'],
+        name: team[0][2]['name'],
+        logoUrl: team[0][5]['team_logos'][0]['team_logo']['url'],
+        owner_name: team[0][19]['managers'][0]['manager']['nickname'],
+        owner_guid: team[0][19]['managers'][0]['manager']['guid'],
         roster: []
       }
-      var rawRoster = teams[i][1].roster['0'].players;
+      var rawRoster = team[1].roster['0'].players;
       var numPlayers = Object.keys(rawRoster)
       for (var y = 0; y < numPlayers.length; y++) {
         var x = ''+y
@@ -95,9 +88,8 @@ var Utils = {
           obj.roster.push(player)
         }
       }
-      final.push(obj)
-    }
-    return final
+      return obj
+    })
   },
   rankByPosition: function(teams, settings, guid){
     //to rank by each position, you need to:
