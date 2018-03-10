@@ -92,17 +92,13 @@ var Utils = {
     })
   },
   rankByPosition: function(teams, settings, guid){
-    //to rank by each position, you need to:
-      //1. average points for a position based on how many starter there are.
-    var teams = this.groupRosterByPos(teams);
-
-    //this has to change ---------
-    var currentWeek = 16
-    //this has to change ---------
-
     var positionsToRank = settings.roster.filter(position => {
       return position.roster_position.position !== 'BN'
     }).map(obj => {return {pos: obj.roster_position.position, count: obj.roster_position.count}})
+console.log(positionsToRank)
+    var teams = this.groupRosterByPos(teams, positionsToRank);
+
+
 
     var averages = teams.map(team => {
       var final = {};
@@ -141,18 +137,7 @@ console.log(leagueRank)
     //we want to return an array containing objects for each team. Each team will have each position broken down
   },
 
-  groupRosterByPos: function(teams){
-
-    var format = {
-      'QB': 1,
-      'WR': 3,
-      'RB': 2,
-      'TE': 1,
-      'W/R/T': 1,
-      'K': 1,
-      'DEF': 1,
-      'BEN': 6
-    }
+  groupRosterByPos: function(teams, positions){
     return teams.map(team => {
       var final = {
         logoUrl: team.logoUrl,
@@ -165,6 +150,11 @@ console.log(leagueRank)
         team_points: team.team_points,
         ranks: {}
       };
+      var format = {}
+      for (var i = 0; i < positions.length; i++) {
+        format[positions[i]['pos']] = positions[i]['count']
+      }
+
       for (var pos in format){
         final.ranks[pos] = {}
         final.ranks[pos] = _.filter(team.roster, function(p){
