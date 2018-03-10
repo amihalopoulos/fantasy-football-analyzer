@@ -113,11 +113,10 @@ var Utils = {
     }
     return final
   },
-  rankByPosition: function(teams, settings, format){
+  rankByPosition: function(teams, settings, guid){
     //to rank by each position, you need to:
       //1. average points for a position based on how many starter there are.
-    var averages = {}
-    var teams = this.groupRosterByPos(teams, format);
+    var teams = this.groupRosterByPos(teams);
 
     //this has to change ---------
     var currentWeek = 16
@@ -127,7 +126,7 @@ var Utils = {
       return position.roster_position.position !== 'BN'
     }).map(obj => {return {pos: obj.roster_position.position, count: obj.roster_position.count}})
 
-    return teams.map(team => {
+    var averages = teams.map(team => {
       var final = {};
       for (var i = 0; i < positionsToRank.length; i++) {
         final[positionsToRank[i].pos] = 0;
@@ -137,15 +136,34 @@ var Utils = {
         final[positionsToRank[i].pos] = totalPoints ? totalPoints/positionsToRank[i].count : 0;
       }
       team.averages = final
+      team.currentUser = team.owner_guid === guid;
+
       return team
     })
 
+    var currentTeam = _.findWhere(averages, {currentUser: true});
+
+    var leagueRank = {}
+    for (var i = 0; i < positionsToRank.length; i++) {
+      leagueRank[positionsToRank[i].pos] = averages.map(team => {
+        return {
+          name: team.name,
+          guid: team.owner_guid,
+          currentUser: team.currentUser,
+          averages: team.averages,
+          roster: team.roster
+        }
+      }).sort((a,b) => {
+        return b.averages[positionsToRank[i].pos] - a.averages[positionsToRank[i].pos]
+      })
+    }
+console.log(leagueRank)
 
     return averages
     //we want to return an array containing objects for each team. Each team will have each position broken down
   },
 
-  groupRosterByPos: function(teams, format){
+  groupRosterByPos: function(teams){
 
     var format = {
       'QB': 1,
