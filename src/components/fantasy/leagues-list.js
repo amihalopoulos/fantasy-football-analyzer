@@ -30,7 +30,9 @@ class LeaguesList extends Component{
           content = <div>Loading League ... </div>
         } else {
           console.log(this.props.league)
-          console.log(Utils.normalizeTeams(this.props.league.league, this.props.league.stats, this.props.league.teamStats))
+          var roster = Utils.normalizeTeams(this.props.league.league, this.props.league.stats, this.props.league.teamStats) 
+          console.log(roster)
+          console.log(Utils.rankByPosition(roster))
 
           content = <div>need to format league info</div>
         }

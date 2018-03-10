@@ -99,18 +99,78 @@ var Utils = {
         var x = ''+y
         if (rawRoster[x] && rawRoster[x].player) {
           var player = {}
-          player.name = rawRoster[x].player[0][2].name
-          player.player_key = rawRoster[x].player[0][0].player_key
-          player.player_id = rawRoster[x].player[0][1].player_id
-          player.display_position = rawRoster[x].player[0][9].display_position
-          player.position_type = rawRoster[x].player[0][12].position_type
-          player.eligible_positions = rawRoster[x].player[0][13].eligible_positions
+          Object.keys(rawRoster[x].player[0]).map((key, index) => {
+            // rawRoster[x].player[0][key] returns {player_key: "371.p.100017"}
+            if (typeof rawRoster[x].player[0][key] === 'object') {
+              Object.keys(rawRoster[x].player[0][key]).map((k, i) => {
+                player[k] = rawRoster[x].player[0][key][k]
+              })
+            }
+
+            // console.log(key, index)
+            // player[key] = rawRoster[x].player[0][key]
+          })
+          console.log(player)
+          // player.name = rawRoster[x].player[0][2].name
+          // player.player_key = rawRoster[x].player[0][0].player_key
+          // player.player_id = rawRoster[x].player[0][1].player_id
+          // player.display_position = rawRoster[x].player[0][9].display_position
+          // if (!rawRoster[x].player[0][12].position_type) {
+          //   console.log(rawRoster[x].player[0])
+          //   player.position_type = rawRoster[x].player[0][13].position_type
+          //   player.eligible_positions = rawRoster[x].player[0][14].eligible_positions
+          // } else {
+          //   player.position_type = rawRoster[x].player[0][12].position_type
+          //   player.eligible_positions = rawRoster[x].player[0][13].eligible_positions
+          // }
           obj.roster.push(player)
         }
       }
       final.push(obj)
     }
     return final
+  },
+  rankByPosition: function(teams, settings, format){
+    //to rank by each position, you need
+    var format = {
+      'QB': 1,
+      'WR': 3,
+      'RB': 2,
+      'TE': 1,
+      'W/R/T': 1,
+      'K': 1,
+      'DEF': 1,
+      'BEN': 6
+    }
+    return teams.map(team => {
+      var final = {
+        logoUrl: team.logoUrl,
+        name: team.name,
+        owner_guid: team.owner_guid,
+        owner_name: team.owner_name,
+        roster: team.roster,
+        team_id: team.team_id,
+        team_key: team.team_key,
+        team_points: team.team_points,
+        ranks: {}
+      };
+      for (var pos in format){
+        final.ranks[pos] = {}
+        final.ranks[pos] = _.filter(team.roster, function(p){
+          var elig = false
+          if (p.eligible_positions) {
+            for (var i = 0; i < p.eligible_positions.length; i++) {
+              if (p.eligible_positions[i].position === pos){
+                elig = true
+              }
+            }
+          }
+          return elig
+        })
+
+      }
+      return final
+    })
   }
 }
 
