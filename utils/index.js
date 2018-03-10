@@ -27,7 +27,7 @@ var Utils = {
       for (var x = 0; x < teamRosters[i].roster.length; x++) {
         var playerStats = _.findWhere(stats, {player_key: teamRosters[i].roster[x].player_key})
         teamRosters[i].roster[x].stats = playerStats.stats;
-        teamRosters[i].roster[x].points = playerStats.points;
+        teamRosters[i].roster[x].points = playerStats.points ? +playerStats.points.total : 0;
       }
       var teamPoints = _.findWhere(teamStats, {team_key: teamRosters[i].team_key})
       teamRosters[i].team_points = teamPoints ? teamPoints.points : false;
@@ -100,29 +100,12 @@ var Utils = {
         if (rawRoster[x] && rawRoster[x].player) {
           var player = {}
           Object.keys(rawRoster[x].player[0]).map((key, index) => {
-            // rawRoster[x].player[0][key] returns {player_key: "371.p.100017"}
             if (typeof rawRoster[x].player[0][key] === 'object') {
               Object.keys(rawRoster[x].player[0][key]).map((k, i) => {
                 player[k] = rawRoster[x].player[0][key][k]
               })
             }
-
-            // console.log(key, index)
-            // player[key] = rawRoster[x].player[0][key]
           })
-          console.log(player)
-          // player.name = rawRoster[x].player[0][2].name
-          // player.player_key = rawRoster[x].player[0][0].player_key
-          // player.player_id = rawRoster[x].player[0][1].player_id
-          // player.display_position = rawRoster[x].player[0][9].display_position
-          // if (!rawRoster[x].player[0][12].position_type) {
-          //   console.log(rawRoster[x].player[0])
-          //   player.position_type = rawRoster[x].player[0][13].position_type
-          //   player.eligible_positions = rawRoster[x].player[0][14].eligible_positions
-          // } else {
-          //   player.position_type = rawRoster[x].player[0][12].position_type
-          //   player.eligible_positions = rawRoster[x].player[0][13].eligible_positions
-          // }
           obj.roster.push(player)
         }
       }
@@ -131,7 +114,39 @@ var Utils = {
     return final
   },
   rankByPosition: function(teams, settings, format){
-    //to rank by each position, you need
+    //to rank by each position, you need to:
+      //1. average points for a position based on how many starter there are.
+    var averages = {}
+    var teams = this.groupRosterByPos(teams, format);
+
+    //this has to change ---------
+    var currentWeek = 16
+    //this has to change ---------
+
+    var positionsToRank = settings.roster.filter(position => {
+      return position.roster_position.position !== 'BN'
+    }).map(obj => {return {pos: obj.roster_position.position, count: obj.roster_position.count}})
+
+    return teams.map(team => {
+      var final = {};
+      for (var i = 0; i < positionsToRank.length; i++) {
+        final[positionsToRank[i].pos] = 0;
+        var totalPoints = team.ranks[positionsToRank[i].pos].reduce((total, player) => {
+          return total + +player.points
+        }, 0)
+        final[positionsToRank[i].pos] = totalPoints ? totalPoints/positionsToRank[i].count : 0;
+      }
+      team.averages = final
+      return team
+    })
+
+
+    return averages
+    //we want to return an array containing objects for each team. Each team will have each position broken down
+  },
+
+  groupRosterByPos: function(teams, format){
+
     var format = {
       'QB': 1,
       'WR': 3,

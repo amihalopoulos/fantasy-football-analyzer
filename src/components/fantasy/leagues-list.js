@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import LeagueListItem from './league-list-item'
+import League from './league'
+
 import Utils from '../../../utils'
 
 class LeaguesList extends Component{
@@ -32,9 +34,10 @@ class LeaguesList extends Component{
           console.log(this.props.league)
           var roster = Utils.normalizeTeams(this.props.league.league, this.props.league.stats, this.props.league.teamStats) 
           console.log(roster)
-          console.log(Utils.rankByPosition(roster))
+          console.log(Utils.rankByPosition(roster, this.props.league.settings))
 
-          content = <div>need to format league info</div>
+          content = <League name={'alexei'}/>
+          // content = <div>need to format league info</div>
         }
       } else {
         content = <div>Couldn't find a league!</div>
