@@ -7,32 +7,18 @@ var Utils = {
     var stats = this.flattenStats(stats);
     var teamStats = this.normalizeTeamStats(teamStats);
 
-    // return teamRosters.map(function(roster){
-    //   if (roster && roster.roster) {
-    //     var newRoster = roster.roster.map(function(player){
-    //       if (player && player.player_key) {
-    //         var playerStats = _.findWhere(stats, {player_key: player.player_key})
-    //         player.stats = playerStats.stats;
-    //         player.points = playerStats.points;
-    //         return player
-    //       }
-    //     })
-    //     var teamPoints = _.findWhere(teamStats, {team_key: roster.team_key})
-    //     newRoster.team_points = teamPoints ? teamPoints.points : false;
-    //     return newRoster
-    //   }
-    // })
+    return teamRosters.map(team => {
+      team.roster = team.roster.map(player => {
+        var playerStats = _.findWhere(stats, {player_key: player.player_key})
+        player.stats = playerStats.stats;
+        player.points = playerStats.points ? +playerStats.points.total : 0;
+        return player
+      })
 
-    for (var i = 0; i < teamRosters.length; i++) {
-      for (var x = 0; x < teamRosters[i].roster.length; x++) {
-        var playerStats = _.findWhere(stats, {player_key: teamRosters[i].roster[x].player_key})
-        teamRosters[i].roster[x].stats = playerStats.stats;
-        teamRosters[i].roster[x].points = playerStats.points ? +playerStats.points.total : 0;
-      }
-      var teamPoints = _.findWhere(teamStats, {team_key: teamRosters[i].team_key})
-      teamRosters[i].team_points = teamPoints ? teamPoints.points : false;
-    }
-    return teamRosters
+      var teamPoints = _.findWhere(teamStats, {team_key: team.team_key})
+      team.team_points = teamPoints ? teamPoints.points : false;
+      return team
+    })
 
   },
   normalizeTeamStats: function(teamStats){
@@ -133,7 +119,7 @@ var Utils = {
         var totalPoints = team.ranks[positionsToRank[i].pos].reduce((total, player) => {
           return total + +player.points
         }, 0)
-        final[positionsToRank[i].pos] = totalPoints ? totalPoints/positionsToRank[i].count : 0;
+        final[positionsToRank[i].pos] = totalPoints;
       }
       team.averages = final
       team.currentUser = team.owner_guid === guid;
