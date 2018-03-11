@@ -20,3 +20,19 @@ html, body {
   text-align: center;
   padding-top: 50px;
 }
+
+.rankings-list{
+  width: 50%;
+  text-align: left;
+  background-color: #ffffff;
+  margin: 0 auto;
+}
+.pos{
+  width: 50px;
+  display: inline-block;
+}
+.rank{
+  width: 50px;
+  display: inline-block;
+  text-align: right;
+}

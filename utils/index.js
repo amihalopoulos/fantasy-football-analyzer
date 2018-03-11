@@ -121,7 +121,6 @@ var Utils = {
 
     var teams = this.groupRosterByPos(teams, positionsToRank);
 
-
     var averages = teams.map(team => {
       var final = {};
       for (var i = 0; i < positionsToRank.length; i++) {
@@ -157,12 +156,9 @@ var Utils = {
     return averages.map(team => {
       team.rankings = {}
       for (var i = 0; i < positionsToRank.length; i++) {
-
         var rank = leagueRank[positionsToRank[i].pos].findIndex( teamRank => team.owner_guid == teamRank.guid)
-        console.log(rank)
         team.rankings[positionsToRank[i].pos] = rank + 1
       }
-      console.log(team)
       return team
     })
   },

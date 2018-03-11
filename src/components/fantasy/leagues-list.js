@@ -31,13 +31,10 @@ class LeaguesList extends Component{
         if (!this.props.league.league) {
           content = <div>Loading League ... </div>
         } else {
-          // var roster = Utils.normalizeTeams(this.props.league.league, this.props.league.stats, this.props.league.teamStats) 
-          // console.log(Utils.rankByPosition(roster, this.props.league.settings, this.props.user.user.guid))
-          console.log(this.props.league.normalized)
-          content = <League name={'alexei'}/>
+          content = <League name={'alexei'} {...this.props}/>
         }
       } else {
-        content = <div>Couldn't find a league!</div>
+        content = <div>Couldn't find a league! Please refresh the page. </div>
       }
 
 
