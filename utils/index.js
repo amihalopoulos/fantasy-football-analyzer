@@ -2,7 +2,8 @@ var _ = require('underscore')
 
 // export default Utils = {
 var Utils = {
-  normalizeTeams: function(league, stats, teamStats){
+  normalizeTeams: function(league, stats, teamStats, user){
+    console.log(user)
     var teamRosters = this.formatTeamRosters(league);
     var stats = this.flattenStats(stats);
     var teamStats = this.normalizeTeamStats(teamStats);
@@ -91,13 +92,34 @@ var Utils = {
       return obj
     })
   },
-  rankByPosition: function(teams, settings, guid){
-    var positionsToRank = settings.roster.filter(position => {
+  formatLeauge: function(league){
+    return league.fantasy_content.league[0];
+  },
+  formatLeagueSettings: function(settings){
+    return {
+      roster: this.formatRosterLayout(settings),
+      statCategories: settings.fantasy_content.league[1].settings[0].stat_categories,
+      statModifiers: settings.fantasy_content.league[1].settings[0].stat_modifiers,
+      rosterCount: this.getNumRosterSpots(settings)
+    }
+  },
+  formatRosterLayout: function(settings){
+    return settings.fantasy_content.league[1].settings[0].roster_positions.filter(position => {
       return position.roster_position.position !== 'BN'
     }).map(obj => {return {pos: obj.roster_position.position, count: obj.roster_position.count}})
-console.log(positionsToRank)
-    var teams = this.groupRosterByPos(teams, positionsToRank);
+  },
+  getNumRosterSpots: function(settings){
+    var numRosterSpots = 0;
+    var roster = settings.fantasy_content.league[1].settings[0].roster_positions;
+    for (var i = 0; i < roster.length; i++) {
+      numRosterSpots += roster[i].roster_position.count
+    }
+    return numRosterSpots
+  },
+  rankByPosition: function(teams, settings, guid){
+    var positionsToRank = settings.roster
 
+    var teams = this.groupRosterByPos(teams, positionsToRank);
 
 
     var averages = teams.map(team => {
@@ -131,10 +153,18 @@ console.log(positionsToRank)
         return b.averages[positionsToRank[i].pos] - a.averages[positionsToRank[i].pos]
       })
     }
-console.log(leagueRank)
 
-    return averages
-    //we want to return an array containing objects for each team. Each team will have each position broken down
+    return averages.map(team => {
+      team.rankings = {}
+      for (var i = 0; i < positionsToRank.length; i++) {
+
+        var rank = leagueRank[positionsToRank[i].pos].findIndex( teamRank => team.owner_guid == teamRank.guid)
+        console.log(rank)
+        team.rankings[positionsToRank[i].pos] = rank + 1
+      }
+      console.log(team)
+      return team
+    })
   },
 
   groupRosterByPos: function(teams, positions){
