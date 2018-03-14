@@ -52,14 +52,15 @@ app.use(session({
 }));
 app.use(express.static(path.join(__dirname, './dist')));
 
-let globUser;
-
+var globUser;
+app.set('globUser', undefined)
 //express routes
 app.get(['/', '/app*'], (req, res) => {
   console.log('Serving ', req.url);
   res.sendFile(__dirname + '/dist/app.html');
 });
-
+// var userRoute = require('./routes/user');
+// app.use('/user', userRoute)
 app.get('/user', (req, res) => {
   var user = req.session.user;
   globUser = user;
