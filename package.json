@@ -21,6 +21,7 @@
     "mongoose": "^4.13.11",
     "querystring": "^0.2.0",
     "react": "^16.2.0",
+    "react-bootstrap": "^0.32.1",
     "react-dom": "^16.2.0",
     "react-redux": "^5.0.7",
     "react-router-dom": "^4.2.2",
@@ -36,7 +37,6 @@
     "babel-preset-react": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "css-loader": "^0.28.10",
-    "less": "^3.0.1",
     "less-loader": "^4.1.0",
     "style-loader": "^0.20.2",
     "webpack": "^3.11.0"

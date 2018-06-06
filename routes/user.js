@@ -3,6 +3,12 @@ var express = require('express');
 var router = express.Router();
 var env = require('../environment.json');
 
+// module.exports = function(app){
+
+//  ...
+
+// }
+
 router.use((req, res, next) => {
   console.log('user route....')
   next()

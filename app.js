@@ -22,7 +22,9 @@ var userSchema = new mongoose.Schema({
   firstName: String,
   lastName: String,
   accessToken: String,
-  refreshToken: String
+  refreshToken: String,
+  leagues: [],
+  league: {}
 });
 var User = mongoose.model('User', userSchema);
 var clientId = process.env.CLIENT_ID || env.client_id;
@@ -52,8 +54,6 @@ app.use(session({
 }));
 app.use(express.static(path.join(__dirname, './dist')));
 
-var globUser;
-app.set('globUser', undefined)
 //express routes
 app.get(['/', '/app*'], (req, res) => {
   console.log('Serving ', req.url);
@@ -63,17 +63,28 @@ app.get(['/', '/app*'], (req, res) => {
 // app.use('/user', userRoute)
 app.get('/user', (req, res) => {
   var user = req.session.user;
-  globUser = user;
   var games = false;
 
-  if (user && user.guid) {
-    var gamesPromise = yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/users;use_login=1/games;game_keys=371/leagues?format=json');
+  if (req.session.user && req.session.user.games){
+    console.log('didnt request leagues')
+    res.json({
+      user: req.session.user,
+      games: req.session.user.games,
+      league: req.session.league
+    })
+  } else if (user && user.guid) {
+    var gamesPromise = yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/users;use_login=1/games;game_keys=371/leagues?format=json', req.session.user);
     gamesPromise.then(function(result){
+
+      //this needs to be updated i think, check it out
       let formattedLeagues = result.fantasy_content ? result.fantasy_content.users['0'].user[1].games['0'].game[1].leagues[0].league : false;
+
+      req.session.user.games = formattedLeagues;
 
       res.json({
         user: user,
         games: formattedLeagues,
+        league: user.league && user.leagueKey ? user.league : {}
       })
     }, function(err){
       console.log(err)
@@ -92,57 +103,78 @@ app.get('/user', (req, res) => {
 
 app.get('/logout', function(req, res) {
   delete req.session.user;
-  globUser = undefined;
   res.json({user: {}});
 });
 
 app.get('/league/:leagueKey', function(req, res){
   console.log('FETCHING LEAGUE INFO...')
-  var leagueSettings = yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/settings/?format=json')
-  leagueSettings.then(function(settings){
-    var formattedSettings = Utils.formatLeagueSettings(settings);
-    
-    var leagueInfo = yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/teams/roster/players/?format=json');
-    
-    leagueInfo.then(function(result){
-      var numRequests = Math.ceil((result.fantasy_content.league[0].num_teams*formattedSettings.rosterCount)/25)+1;
-      var statsRequests = [];
-      for (var i = 0; i < numRequests; i++) {
-        statsRequests.push(yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/players;status=T;start='+i*25+'/stats?format=json'))
+  if (req.session.user && req.session.user.guid) {
+    User.findOne({ guid: req.session.user.guid }, function(err, existingUser) {
+      if (existingUser && existingUser.league) {
+        console.log("we didn't make the request")
+        res.json(existingUser.league)
       }
-
-      var teamStatRequests = [];
-      var teams = result.fantasy_content.league[1].teams;
-      for (var key in teams){
-        if (key !== 'count') {
-          teamStatRequests.push(yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/team/'+teams[key].team[0][0].team_key+'/stats;type=season?format=json'))
+    })
+  } else {
+    var leagueSettings = yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/settings/?format=json', req.session.user)
+    leagueSettings.then(function(settings){
+      var formattedSettings = Utils.formatLeagueSettings(settings);
+      
+      var leagueInfo = yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/teams/roster/players/?format=json', req.session.user);
+      
+      leagueInfo.then(function(result){
+        var numRequests = Math.ceil((result.fantasy_content.league[0].num_teams*formattedSettings.rosterCount)/25)+1;
+        var statsRequests = [];
+        for (var i = 0; i < numRequests; i++) {
+          statsRequests.push(yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/players;status=T;start='+i*25+'/stats?format=json', req.session.user))
         }
-      }
 
-      Promise.all(statsRequests).then(function(playerStatData){
-        Promise.all(teamStatRequests).then(function(overallTeamStats){
-          var normalizeData = new Promise((resolve, reject) => {
-            resolve(Utils.normalizeTeams(result, playerStatData, overallTeamStats, globUser.guid))
-          })
-          normalizeData.then(normalized => {
-            res.json({
-              settings: formattedSettings,
-              league: Utils.formatLeauge(result),
-              rankings: Utils.rankByPosition(normalized, formattedSettings, globUser.guid),
-              normalized: normalized
+        var teamStatRequests = [];
+        var teams = result.fantasy_content.league[1].teams;
+        for (var key in teams){
+          if (key !== 'count') {
+            teamStatRequests.push(yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/team/'+teams[key].team[0][0].team_key+'/stats;type=season?format=json', req.session.user))
+          }
+        }
+
+        Promise.all(statsRequests).then(function(playerStatData){
+          Promise.all(teamStatRequests).then(function(overallTeamStats){
+            var normalizeData = new Promise((resolve, reject) => {
+              resolve(Utils.normalizeTeams(result, playerStatData, overallTeamStats, req.session.user.guid))
+            })
+            normalizeData.then(normalized => {
+              //save info to User database / Redis
+              var leagueData = {
+                settings: formattedSettings,
+                league: Utils.formatLeauge(result),
+                rankings: Utils.rankByPosition(normalized, formattedSettings, req.session.user.guid),
+                normalized: normalized,
+                leagueKey: req.params.leagueKey
+              }
+
+              User.findOne({ guid: req.session.user.guid }, function(err, existingUser) {
+                if (existingUser) {
+                  existingUser.league = leagueData
+                  existingUser.save(function(err){
+                    req.session.user = existingUser;
+                  })
+                }
+              })
+
+              res.json(leagueData)
             })
           })
-        })
 
-      }).catch(function(error){
-        console.log(error)
-        res.json({
-          user: user,
-          games: false
+        }).catch(function(error){
+          console.log(error)
+          res.json({
+            user: user,
+            games: false
+          })
         })
       })
     })
-  })
+  }
 
 })
 
@@ -232,9 +264,9 @@ function retryOnce(func, recoverFunc){
     })
 }
 
-function promiseRequest(requestOpts){
+function promiseRequest(requestOpts, user){
   console.log('requesting...' + requestOpts.url)
-  requestOpts.headers.Authorization += globUser.accessToken;
+  requestOpts.headers.Authorization += user.accessToken;
   return new Promise(function(resolve, reject){
     request(requestOpts, function(err, res, body){
       if (err || (body && body.error)) {
@@ -251,7 +283,7 @@ function refreshAccessToken(){
       'Content-Type': 'application/x-www-form-urlencoded',
       'Authorization': 'Basic ' + new Buffer(clientId + ':' + clientSecret).toString('base64'),
   };
-  var dataString = 'grant_type=refresh_token&redirect_uri=oob&refresh_token='+globUser.refreshToken;
+  var dataString = 'grant_type=refresh_token&redirect_uri=oob&refresh_token='+req.session.user.refreshToken;
   var options = {
       url: 'https://api.login.yahoo.com/oauth2/get_token',
       method: 'POST',
@@ -262,9 +294,9 @@ function refreshAccessToken(){
   return new Promise(function(resolve, reject){ 
     request(options, function(err, response, body) {
       if (!err && response.statusCode == 200) {
-        if (globUser.accessToken !== body.accessToken) {
-          globUser.accessToken = body.access_token;
-          globUser.refreshToken = body.refresh_token;
+        if (req.session.user.accessToken !== body.accessToken) {
+          req.session.user.accessToken = body.access_token;
+          req.session.user.refreshToken = body.refresh_token;
         }
         resolve(body)
       } else {
@@ -274,7 +306,7 @@ function refreshAccessToken(){
   })
 };
 
-function yahooPromise(url){
+function yahooPromise(url, user){
   var options = {
     url: url,
     method: 'GET',
@@ -284,7 +316,7 @@ function yahooPromise(url){
   }
 
   return retryOnce(() => {
-    return promiseRequest(options)
+    return promiseRequest(options, user)
       .then(function(results){
         return results
       })
