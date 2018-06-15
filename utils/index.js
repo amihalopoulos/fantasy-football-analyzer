@@ -92,7 +92,7 @@ var Utils = {
       return obj
     })
   },
-  formatLeauge: function(league){
+  formatLeague: function(league){
     return league.fantasy_content.league[0];
   },
   formatLeagueSettings: function(settings){
@@ -128,6 +128,7 @@ var Utils = {
         var totalPoints = team.ranks[positionsToRank[i].pos].reduce((total, player) => {
           return total + +player.points
         }, 0)
+        totalPoints = totalPoints > 0 ? totalPoints / team.ranks[positionsToRank[i].pos].length : 0;
         final[positionsToRank[i].pos] = totalPoints;
       }
       team.averages = final
