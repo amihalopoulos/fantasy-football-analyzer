@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
+import { Button } from 'react-bootstrap'
 
 class LoginButton extends Component{
 
     render() {
-        return <a href="/auth/yahoo">Login!</a>
+        return <Button href="/auth/yahoo">Login!</Button>
     };
 }
 

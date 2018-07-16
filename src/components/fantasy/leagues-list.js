@@ -2,19 +2,21 @@ import React, { Component } from 'react';
 import LeagueListItem from './league-list-item'
 import League from './league'
 
-import Utils from '../../../utils'
 
 class LeaguesList extends Component{
   constructor(props) {
     super(props);
     this.state = {
-      selectedLeague: this.props.selectedLeague
+      selectedLeague: false
     };
   }
 
   selectLeague(leagueKey) {
-    this.setState({'selectedLeague': leagueKey})
+    // this.setState({'selectedLeague': leagueKey})
     this.props.fetchLeagueData(leagueKey)
+    this.setState({
+      selectedLeague: leagueKey
+    })
   }
 
   render() {
@@ -27,6 +29,7 @@ class LeaguesList extends Component{
           return <LeagueListItem  key={object.league_key} {...object} onClick={() => this.selectLeague(object.league_key)}/>
         }, this)
       } else if (this.state.selectedLeague){
+        console.log(this.props)
         header = <div>League Analysis</div>
         if (!this.props.league.league) {
           content = <div>Loading League ... </div>

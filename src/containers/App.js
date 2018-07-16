@@ -11,9 +11,6 @@ export default (ChildComponent) => {
       this.props.fetchUser()
     }
 
-    componentWillReceiveProps(nextProps) {
-    }
-
     render () {
       const { user, isLoading } = this.props
       return (user && user.user && user.user.guid

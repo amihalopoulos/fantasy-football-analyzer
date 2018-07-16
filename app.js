@@ -11,8 +11,9 @@ var session = require('express-session');
 var mongoose = require('mongoose');
 var _ = require('underscore');
 var MongoStore = require('connect-mongo')(session);
-var Utils = require('./utils');
+var YahooUtils = require('./utils/yahoo');
 var app;
+var ApiUtil = require('./utils/apis');
 
 //MongoDB
 var userSchema = new mongoose.Schema({
@@ -59,8 +60,7 @@ app.get(['/', '/app*'], (req, res) => {
   console.log('Serving ', req.url);
   res.sendFile(__dirname + '/dist/app.html');
 });
-// var userRoute = require('./routes/user');
-// app.use('/user', userRoute)
+
 app.get('/user', (req, res) => {
   var user = req.session.user;
   var games = false;
@@ -69,11 +69,10 @@ app.get('/user', (req, res) => {
     console.log('didnt request leagues')
     res.json({
       user: req.session.user,
-      games: req.session.user.games,
       league: req.session.league
     })
   } else if (user && user.guid) {
-    var gamesPromise = yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/users;use_login=1/games;game_keys=371/leagues?format=json', req.session.user);
+    var gamesPromise = ApiUtil.yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/users;use_login=1/games;game_keys=371/leagues?format=json', req.session.user);
     gamesPromise.then(function(result){
 
       //this needs to be updated i think, check it out
@@ -83,14 +82,12 @@ app.get('/user', (req, res) => {
 
       res.json({
         user: user,
-        games: formattedLeagues,
         league: user.league && user.leagueKey ? user.league : {}
       })
-    }, function(err){
+    }, (err) => {
       console.log(err)
       res.json({
         user: user,
-        games: false
       })
     }).then(function(result){
     })
@@ -101,15 +98,15 @@ app.get('/user', (req, res) => {
   }
 })
 
-app.get('/logout', function(req, res) {
+app.get('/logout', (req, res) => {
   delete req.session.user;
   res.json({user: {}});
 });
 
-app.get('/league/:leagueKey', function(req, res){
+app.get('/league/:leagueKey', (req, res) => {
   console.log('FETCHING LEAGUE INFO...')
   if (req.session.user && req.session.user.guid && req.session.user.league) {
-    User.findOne({ guid: req.session.user.guid }, function(err, existingUser) {
+    User.findOne({ guid: req.session.user.guid }, (err, existingUser) =>  {
       if (existingUser && existingUser.league) {
         console.log("we didn't make the request")
         res.json(existingUser.league)
@@ -117,25 +114,24 @@ app.get('/league/:leagueKey', function(req, res){
     })
   } else {
     var leagueRosterResult, formattedSettings;
-    yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/settings/?format=json', req.session.user)
-    .then(function(settings){
-      return Promise.resolve( Utils.formatLeagueSettings(settings) )
-    })
-    .then(function(fSettings){
+    ApiUtil.yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/settings/?format=json', req.session.user)
+    .then( (settings) => Promise.resolve( YahooUtils.formatLeagueSettings(settings) ))
+    .then((fSettings) => {
       formattedSettings = fSettings;
-      return yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/teams/roster/players/?format=json', req.session.user).then(function(result){
+      return ApiUtil.yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/teams/roster/players/?format=json', req.session.user).then(function(result){
         leagueRosterResult = result;
+        
         var numRequests = Math.ceil((result.fantasy_content.league[0].num_teams*formattedSettings.rosterCount)/25)+1;
         var playerStatsRequests = [];
         for (var i = 0; i < numRequests; i++) {
-          playerStatsRequests.push(yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/players;status=T;start='+i*25+'/stats?format=json', req.session.user))
+          playerStatsRequests.push(ApiUtil.yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/players;status=T;start='+i*25+'/stats?format=json', req.session.user))
         }
 
         var teamStatRequests = [];
         var teams = result.fantasy_content.league[1].teams;
         for (var key in teams){
           if (key !== 'count') {
-            teamStatRequests.push(yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/team/'+teams[key].team[0][0].team_key+'/stats;type=season?format=json', req.session.user))
+            teamStatRequests.push(ApiUtil.yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/team/'+teams[key].team[0][0].team_key+'/stats;type=season?format=json', req.session.user))
           }
         }
 
@@ -150,14 +146,14 @@ app.get('/league/:leagueKey', function(req, res){
 
       })
     })
-    .then(function(requests){
-      Promise.all(requests).then(function(finalData){
-        return Promise.resolve( Utils.normalizeTeams( leagueRosterResult, finalData[0], finalData[1], req.session.user.guid ) ).then(normalized => {
+    .then((requests) => {
+      return Promise.all(requests).then((finalData) => {
+        return Promise.resolve( YahooUtils.normalizeTeams( leagueRosterResult, finalData[0], finalData[1], req.session.user.guid ) ).then(normalized => {
           
           var leagueDataResponse = {
             settings: formattedSettings,
-            league: Utils.formatLeague(leagueRosterResult),
-            rankings: Utils.rankByPosition(normalized, formattedSettings, req.session.user.guid),
+            league: YahooUtils.formatLeague(leagueRosterResult),
+            rankings: YahooUtils.rankByPosition(normalized, formattedSettings, req.session.user.guid),
             normalized: normalized,
             leagueKey: req.params.leagueKey
           }
@@ -175,15 +171,14 @@ app.get('/league/:leagueKey', function(req, res){
 
         })
       })
-      .then( function(leagueData){
-        res.json(leagueData)
-      })
-      .catch(function(error){
-        console.log(error)
-        res.json({
-          user: user,
-          games: false
-        })
+    })
+    .then(leagueData => leagueData)
+    .then(leagueData => res.json(leagueData))
+    .catch( (error) => {
+      console.log(error)
+      res.json({
+        user: user,
+        games: false
       })
     })
   }
@@ -235,7 +230,7 @@ app.get('/auth/yahoo/callback', function(req, res) {
 
     // 2. Retrieve profile information about the current user.
     request.get(options, function(err, response, body) {
-console.log('requesting user profile from yahoo...')
+    console.log('requesting user profile from yahoo...')
       // 3. Create a new user account or return an existing one.
       User.findOne({ guid: guid }, function(err, existingUser) {
         if (existingUser) {
@@ -272,75 +267,6 @@ console.log('requesting user profile from yahoo...')
   });
 });
 
-function retryOnce(func, recoverFunc){
-  return func()
-    .catch( err => {
-      console.log('failed, trying recovery once...')
-      return recoverFunc(err).then(() => func())
-    })
-}
-
-function promiseRequest(requestOpts, user){
-  console.log('requesting...' + requestOpts.url)
-  requestOpts.headers.Authorization += user.accessToken;
-  return new Promise(function(resolve, reject){
-    request(requestOpts, function(err, res, body){
-      if (err || (body && body.error)) {
-        reject(err)
-      } else {
-        resolve(body)
-      }
-    })
-  })
-}
-
-function refreshAccessToken(){
-  var headers = {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': 'Basic ' + new Buffer(clientId + ':' + clientSecret).toString('base64'),
-  };
-  var dataString = 'grant_type=refresh_token&redirect_uri=oob&refresh_token='+req.session.user.refreshToken;
-  var options = {
-      url: 'https://api.login.yahoo.com/oauth2/get_token',
-      method: 'POST',
-      json: true,
-      headers: headers,
-      body: dataString
-  };
-  return new Promise(function(resolve, reject){ 
-    request(options, function(err, response, body) {
-      if (!err && response.statusCode == 200) {
-        if (req.session.user.accessToken !== body.accessToken) {
-          req.session.user.accessToken = body.access_token;
-          req.session.user.refreshToken = body.refresh_token;
-        }
-        resolve(body)
-      } else {
-        reject(err)
-      }
-    });
-  })
-};
-
-function yahooPromise(url, user){
-  var options = {
-    url: url,
-    method: 'GET',
-    headers: { Authorization: 'Bearer ' },
-    rejectUnauthorized: false,
-    json: true
-  }
-
-  return retryOnce(() => {
-    return promiseRequest(options, user)
-      .then(function(results){
-        return results
-      })
-      .catch(err => {
-        return Promise.reject(err)
-      })
-  }, refreshAccessToken)
-}
 
 app.listen(app.get('port'), function() {
   console.log('app listening on port ' + app.get('port'))

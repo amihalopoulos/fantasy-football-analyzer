@@ -2,27 +2,35 @@ import React, { Component } from 'react';
 import LoginButton from './login-button';
 import LogoutButton from './logout-button';
 // import { Breadcrumb } from 'react-bootstrap';
+import { PageHeader, ButtonToolbar, Button } from 'react-bootstrap'
 
 class User extends Component{
 
   render() {
     let button;
-    let text;
+    let buttons = [];
+    let text, userStatusButton;
     if (this.props && this.props.user && this.props.user.firstName) {
-      text = this.props.user.firstName + ' / Fantasy Football'
-      button = <LogoutButton onClick={this.props.logOutUser} />
+      text = this.props.user.firstName + "'s Fantasy Football Dashboard"
+      userStatusButton = <LogoutButton onClick={this.props.logOutUser} />
     } else {
-      button = <LoginButton />
+      userStatusButton = <LoginButton />
       text = 'not logged in'
     }
-    const { leagueName } = this.props
+    buttons.push(userStatusButton)
+    // buttons.push(<Button></Button>)
+    // const leagueName = this.props
 
-    if (leagueName) {
-      text += ' / '+ leagueName
-    }
+    // if (leagueName) {
+    //   text += ' / '+ leagueName
+    // }
     return <div className="user-nav">
+    <PageHeader>
       {text}
-      {button}
+      <ButtonToolbar>
+        {buttons}
+      </ButtonToolbar>
+    </PageHeader>
     </div>
   };
 }
