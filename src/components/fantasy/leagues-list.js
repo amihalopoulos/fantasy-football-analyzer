@@ -22,10 +22,10 @@ class LeaguesList extends Component{
   render() {
       let content = null;
       let header = null;
-
-      if (!this.state.selectedLeague && this.props.user.games) {
+console.log(this.props.user)
+      if (!this.state.selectedLeague && this.props.user.user.games) {
         header = <div>Choose a League</div>
-        content = this.props.user.games.map(function(object) {
+        content = this.props.user.user.games.map(function(object) {
           return <LeagueListItem  key={object.league_key} {...object} onClick={() => this.selectLeague(object.league_key)}/>
         }, this)
       } else if (this.state.selectedLeague){

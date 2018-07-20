@@ -74,7 +74,6 @@ app.get('/user', (req, res) => {
   } else if (user && user.guid) {
     var gamesPromise = ApiUtil.yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/users;use_login=1/games;game_keys=371/leagues?format=json', req.session.user);
     gamesPromise.then(function(result){
-
       //this needs to be updated i think, check it out
       let formattedLeagues = result.fantasy_content ? result.fantasy_content.users['0'].user[1].games['0'].game[1].leagues[0].league : false;
 
@@ -116,63 +115,58 @@ app.get('/league/:leagueKey', (req, res) => {
     var leagueRosterResult, formattedSettings;
     ApiUtil.yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/settings/?format=json', req.session.user)
     .then( (settings) => Promise.resolve( YahooUtils.formatLeagueSettings(settings) ))
-    .then((fSettings) => {
-      formattedSettings = fSettings;
-      return ApiUtil.yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/teams/roster/players/?format=json', req.session.user).then(function(result){
-        leagueRosterResult = result;
-        
-        var numRequests = Math.ceil((result.fantasy_content.league[0].num_teams*formattedSettings.rosterCount)/25)+1;
-        var playerStatsRequests = [];
-        for (var i = 0; i < numRequests; i++) {
-          playerStatsRequests.push(ApiUtil.yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/players;status=T;start='+i*25+'/stats?format=json', req.session.user))
+    .then((fSettings) => formattedSettings = fSettings )
+    .then(() => ApiUtil.yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/teams/roster/players/?format=json', req.session.user))
+    .then(function(result){
+      leagueRosterResult = result;
+      
+      var numRequests = Math.ceil((result.fantasy_content.league[0].num_teams*formattedSettings.rosterCount)/25)+1;
+      var playerStatsRequests = [];
+      for (var i = 0; i < numRequests; i++) {
+        playerStatsRequests.push(ApiUtil.yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/league/'+req.params.leagueKey+'/players;status=T;start='+i*25+'/stats?format=json', req.session.user))
+      }
+
+      var teamStatRequests = [];
+      var teams = result.fantasy_content.league[1].teams;
+      for (var key in teams){
+        if (key !== 'count') {
+          teamStatRequests.push(ApiUtil.yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/team/'+teams[key].team[0][0].team_key+'/stats;type=season?format=json', req.session.user))
         }
+      }
 
-        var teamStatRequests = [];
-        var teams = result.fantasy_content.league[1].teams;
-        for (var key in teams){
-          if (key !== 'count') {
-            teamStatRequests.push(ApiUtil.yahooPromise('https://fantasysports.yahooapis.com/fantasy/v2/team/'+teams[key].team[0][0].team_key+'/stats;type=season?format=json', req.session.user))
-          }
-        }
-
-        var playerStats = Promise.all(playerStatsRequests).then(function(playerStatData){
-          return playerStatData
-        });
-        var teamStats = Promise.all(teamStatRequests).then(function(overallTeamStats){
-          return overallTeamStats
-        })
-
-        return [playerStats, teamStats]
-
+      var playerStats = Promise.all(playerStatsRequests).then(function(playerStatData){
+        return playerStatData
+      });
+      var teamStats = Promise.all(teamStatRequests).then(function(overallTeamStats){
+        return overallTeamStats
       })
-    })
-    .then((requests) => {
-      return Promise.all(requests).then((finalData) => {
-        return Promise.resolve( YahooUtils.normalizeTeams( leagueRosterResult, finalData[0], finalData[1], req.session.user.guid ) ).then(normalized => {
-          
-          var leagueDataResponse = {
-            settings: formattedSettings,
-            league: YahooUtils.formatLeague(leagueRosterResult),
-            rankings: YahooUtils.rankByPosition(normalized, formattedSettings, req.session.user.guid),
-            normalized: normalized,
-            leagueKey: req.params.leagueKey
-          }
 
-          User.findOne({ guid: req.session.user.guid }, function(err, existingUser) {
-            if (existingUser) {
-              existingUser.league = leagueDataResponse
-              existingUser.save(function(err){
-                req.session.user = existingUser;
-              })
-            }
+      return Promise.all([playerStats, teamStats])
+    })
+    .then((finalData) => Promise.resolve( YahooUtils.normalizeTeams( leagueRosterResult, finalData[0], finalData[1], req.session.user.guid ) ) )
+    .then(normalized => {
+      
+      var leagueDataResponse = {
+        settings: formattedSettings,
+        league: YahooUtils.formatLeague(leagueRosterResult),
+        rankings: YahooUtils.rankByPosition(normalized, formattedSettings, req.session.user.guid),
+        normalized: normalized,
+        leagueKey: req.params.leagueKey
+      }
+
+      User.findOne({ guid: req.session.user.guid }, function(err, existingUser) {
+        if (existingUser) {
+          existingUser.league = leagueDataResponse
+          existingUser.save(function(err){
+            req.session.user = existingUser;
           })
-
-          return leagueDataResponse
-
-        })
+        }
       })
+
+      return leagueDataResponse
+
     })
-    .then(leagueData => leagueData)
+    // .then(leagueData => leagueData)
     .then(leagueData => res.json(leagueData))
     .catch( (error) => {
       console.log(error)
