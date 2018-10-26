@@ -2,3 +2,4 @@ environment.json
 node_modules
 npm-debug.log
 dist/app.bundle.js
+nothing-special.txt

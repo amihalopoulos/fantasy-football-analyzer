@@ -36,7 +36,7 @@ export default (ChildComponent) => {
         dispatch(fetchUser()).then(function(){dispatch(isFetching({isLoading: false}))})
       },
       fetchLeagueData: leagueKey => {
-        dispatch(fetchLeagueData(leagueKey))
+        dispatch(fetchLeagueData(leagueKey)).then(function(){dispatch(isFetching({isLoading: false}))})
       },
       logOutUser : () => {
         dispatch(logOutUser()).then(function(){dispatch(isFetching({isLoading: false}))})

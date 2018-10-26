@@ -1,7 +1,27 @@
 var _ = require('underscore');
 var Utils = require('./index');
+var fuzzySearch = require('fuzzyset.js');
 
 _.extend( Utils, {
+  addPlayerWeights: (gradedPlayers, rosters) => {
+
+    var gradedNamesArray = gradedPlayers.map(obj => obj.name)
+    var dict = fuzzySearch(gradedNamesArray);
+
+    return rosters.map(team => {
+      team.roster = team.roster.map(player => {
+        var match = dict.get(player.name.full, null, 0.75)
+        var value = 0;
+        if (match && match[0]) {
+          value = _.findWhere(gradedPlayers, {name: match[0][1]})['value']
+        }
+        player.weightedValue = value;
+        return player
+      })
+      return team
+    })
+
+  },
   normalizeTeams: function(league, stats, teamStats, user){
 
     var teamRosters = this.formatTeamRosters(league);
@@ -159,9 +179,9 @@ _.extend( Utils, {
       for (var i = 0; i < positionsToRank.length; i++) {
         final[positionsToRank[i].pos] = 0;
         var totalPoints = team.depthChart[positionsToRank[i].pos].reduce((total, player) => {
-          return total + +player.points
+          return total + +player.weightedValue
+          console.log(player.weightedValue)
         }, 0)
-        totalPoints = totalPoints > 0 ? totalPoints / team.depthChart[positionsToRank[i].pos].length : 0;
         final[positionsToRank[i].pos] = totalPoints;
       }
       team.averages = final

@@ -18,12 +18,7 @@ class User extends Component{
       text = 'not logged in'
     }
     buttons.push(userStatusButton)
-    // buttons.push(<Button></Button>)
-    // const leagueName = this.props
 
-    // if (leagueName) {
-    //   text += ' / '+ leagueName
-    // }
     return <div className="user-nav">
     <PageHeader>
       {text}

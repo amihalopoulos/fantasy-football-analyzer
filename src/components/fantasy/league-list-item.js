@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import League from './league'
 
 class LeaguesList extends Component{
 
